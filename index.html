@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0">
+    <title>DashTV - Mundial</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        :root {
+            --bg: #0A0A0A; --panel: rgba(21,21,21,0.95); --gold: #D4AF37;
+            --white: #fff; --dim: #A0A0A0; --live: #FF0000;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); width: 1920px; height: 1080px; overflow: hidden; color: var(--white); }
+
+        .navbar { position: fixed; top: 0; left: 0; right: 0; height: 50px; background: var(--panel); display: flex; align-items: center; padding: 0 40px; z-index: 100; border-bottom: 1px solid rgba(212,175,55,0.3); }
+        .logo { color: var(--gold); font-size: 20px; font-weight: bold; letter-spacing: 3px; margin-right: 50px; }
+        .nav-tabs { display: flex; gap: 5px; }
+        .nav-tab { padding: 8px 25px; border-radius: 6px; color: var(--dim); font-size: 16px; font-weight: 600; letter-spacing: 1px; text-decoration: none; cursor: pointer; }
+        .nav-tab.active { background: rgba(212,175,55,0.15); color: var(--gold); }
+
+        .video-container { position: absolute; top: 90px; left: 40px; width: 1360px; height: 720px; background: #000; border: 2px solid var(--gold); overflow: hidden; box-shadow: 0 0 30px rgba(212,175,55,0.2); }
+        #videoPlayer { width: 100%; height: 100%; object-fit: cover; }
+        .live-indicator { position: absolute; top: 20px; left: 20px; background: var(--live); padding: 10px 20px; border-radius: 30px; display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 18px; z-index: 10; }
+        .live-dot { width: 12px; height: 12px; background: white; border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .marker-overlay { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 15px 40px; border-radius: 12px; display: flex; align-items: center; gap: 25px; z-index: 10; border-bottom: 3px solid var(--gold); }
+        .team-name { font-size: 24px; font-weight: bold; letter-spacing: 2px; }
+        .score-big { font-size: 42px; color: var(--gold); font-weight: 800; }
+
+        .sidebar { position: absolute; top: 90px; right: 40px; width: 440px; height: calc(100% - 130px); background: var(--panel); padding: 35px; border-left: 1px solid rgba(212,175,55,0.3); display: flex; flex-direction: column; gap: 25px; }
+        .sidebar-title { color: var(--gold); font-size: 24px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+        .stat-block { display: flex; flex-direction: column; gap: 12px; }
+        .stat-label { color: var(--dim); font-size: 14px; font-weight: 600; }
+        .progress-container { width: 100%; height: 14px; background: #333; display: flex; border-radius: 7px; overflow: hidden; }
+        .progress-fill { background: var(--gold); height: 100%; transition: width 1s ease; }
+        .stat-values { display: flex; justify-content: space-between; font-size: 22px; font-weight: 600; }
+        .table-mini { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 5px; }
+        .table-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 14px; }
+        .table-row.active { background: rgba(212,175,55,0.15); border-radius: 6px; }
+        .pts { color: var(--gold); font-weight: bold; }
+        .upcoming-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 12px; }
+        .upcoming-date { color: var(--dim); }
+
+        .bottom-bar { position: absolute; bottom: 40px; left: 40px; width: 1360px; height: 180px; background: var(--panel); padding: 20px 25px; display: flex; gap: 25px; align-items: center; }
+        .match-card { min-width: 310px; height: 140px; background: #222; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+        .match-card.live { border: 2px solid var(--live); }
+        .card-teams { font-size: 18px; font-weight: bold; }
+        .card-score { font-size: 32px; color: var(--gold); font-weight: 800; }
+        .card-status { font-size: 12px; color: var(--dim); }
+        .card-status.red { color: var(--live); font-weight: bold; }
+
+        @media (max-width: 1920px) { body { transform: scale(0.8); transform-origin: top left; } }
+        @media (max-width: 1536px) { body { transform: scale(0.6); transform-origin: top left; } }
+        @media (max-width: 1152px) { body { transform: scale(0.45); transform-origin: top left; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <span class="logo">DashTV</span>
+        <div class="nav-tabs">
+            <a href="/" class="nav-tab active">EN VIVO</a>
+            <a href="?page=fixtures" class="nav-tab">CALENDARIO</a>
+            <a href="?page=standings" class="nav-tab">TABLAS</a>
+        </div>
+    </nav>
+
+    <div class="video-container" id="mainContent">
+        <video id="videoPlayer" autoplay muted playsinline></video>
+        <div class="live-indicator"><div class="live-dot"></div>TELEFE EN VIVO</div>
+        <div class="marker-overlay">
+            <span class="team-name">ARG</span>
+            <span class="score-big" id="mainScore">3 - 3</span>
+            <span class="team-name">FRA</span>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebarContent">
+        <div class="sidebar-title">Estadísticas</div>
+        <div class="stat-block">
+            <div class="stat-label">POSESIÓN</div>
+            <div class="progress-container">
+                <div id="posFill" class="progress-fill" style="width:55%"></div>
+            </div>
+            <div class="stat-values">
+                <span id="posVal1">55%</span>
+                <span id="posVal2">45%</span>
+            </div>
+        </div>
+        <div class="stat-block">
+            <div class="stat-label">TIROS AL ARCO</div>
+            <div class="stat-values">
+                <span id="shots1">8</span>
+                <span id="shots2">6</span>
+            </div>
+        </div>
+        <div class="sidebar-title">Tabla Grupo C</div>
+        <div class="table-mini">
+            <div class="table-row active"><span>1. ARGENTINA</span><span class="pts">9 pts</span></div>
+            <div class="table-row"><span>2. POLONIA</span><span>4 pts</span></div>
+            <div class="table-row"><span>3. MÉXICO</span><span>4 pts</span></div>
+        </div>
+        <div class="sidebar-title">Próximos</div>
+        <div class="upcoming-row"><span>HOLANDA vs EEUU</span><span class="upcoming-date">SÁB 12:00</span></div>
+        <div class="upcoming-row"><span>FRANCIA vs POLONIA</span><span class="upcoming-date">DOM 16:00</span></div>
+    </div>
+
+    <div class="bottom-bar" id="bottomContent">
+        <div class="match-card"><div class="card-teams">BRASIL vs ALEMANIA</div><div class="card-score">2 - 0</div><div class="card-status">FINALIZADO</div></div>
+        <div class="match-card live"><div class="card-teams">ESPAÑA vs JAPÓN</div><div class="card-score">1 - 1</div><div class="card-status red">EN VIVO</div></div>
+        <div class="match-card"><div class="card-teams">PORTUGAL vs GHANA</div><div class="card-score">3 - 2</div><div class="card-status">FINALIZADO</div></div>
+    </div>
+
+    <script>
+        const videoSrc = 'https://telefeappmitelefe1.akamaized.net/hls/live/2037985/appmitelefe/TOK/hdntl=exp=1779044750~acl=%2f*~data=hdntl~hmac=f50c478c954f9075c8cf553b47ddd24d16a6dae0325b9e18ddd68bdbec2112bc/master-mtlf.m3u8';
+        const video = document.getElementById('videoPlayer');
+
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(videoSrc);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = videoSrc;
+            video.addEventListener('loadedmetadata', () => video.play());
+        }
+
+        function updateStats() {
+            const base = 55, v = Math.floor(Math.random() * 5) - 2, np = base + v;
+            document.getElementById('posFill').style.width = np + '%';
+            document.getElementById('posVal1').innerText = np + '%';
+            document.getElementById('posVal2').innerText = (100 - np) + '%';
+            if (Math.random() > 0.8) {
+                const s = parseInt(document.getElementById('shots1').innerText);
+                document.getElementById('shots1').innerText = s + 1;
+            }
+        }
+        setInterval(updateStats, 5000);
+    </script>
+</body>
+</html>

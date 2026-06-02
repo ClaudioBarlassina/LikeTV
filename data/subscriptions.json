@@ -1,0 +1,62 @@
+{
+  "admin": {
+    "password": "admin123",
+    "token": "b5b051c6742b54551bf2dcfd4c70b323"
+  },
+  "codes": [
+    {
+      "id": "07c60b04-c5c1-449b-807b-dc40998d52c3",
+      "code": "WC26-401D-F772",
+      "createdAt": "2026-06-01T22:19:05.179Z",
+      "expiresAt": "2026-07-01T22:19:05.179Z",
+      "status": "redeemed",
+      "redeemedAt": "2026-06-01T22:19:25.603Z",
+      "deviceId": "tv_f4vzgt2c",
+      "deviceName": "Web"
+    },
+    {
+      "id": "52d30169-d4fa-4188-9b0c-0539b5b2c6bf",
+      "code": "WC26-F1CB-B6A1",
+      "createdAt": "2026-06-02T03:45:41.039Z",
+      "expiresAt": "2026-07-02T03:45:41.039Z",
+      "status": "redeemed",
+      "redeemedAt": "2026-06-02T03:52:37.094Z",
+      "deviceId": "tv_bhfldgpk",
+      "deviceName": "Web"
+    }
+  ],
+  "channels": [
+    {
+      "id": "telefe",
+      "name": "Telefe",
+      "country": "Argentina",
+      "logo": null,
+      "streamUrl": null,
+      "note": "Disponible durante el Mundial"
+    },
+    {
+      "id": "dsports",
+      "name": "DSports",
+      "country": "Argentina",
+      "logo": null,
+      "streamUrl": "https://yce5o.envivoslatam.org/lb04/dsports/index.m3u8?token=37add3d4921d0c7f2dbd2bc14412b44d6bda6a1c-a1-1780469269-1780415269&ip=181.118.186.80",
+      "note": "Deportes en vivo"
+    },
+    {
+      "id": "espn",
+      "name": "ESPN",
+      "country": "Argentina",
+      "logo": null,
+      "streamUrl": "https://yce5o.envivoslatam.org/espn/tracks-v1a1/mono.m3u8?ip=181.118.186.80&token=1385fd6e86309e82c857f5fba995d6fd358beee2-c9-1780469026-1780415026",
+      "note": "Disponible durante el Mundial"
+    },
+    {
+      "id": "tycsports",
+      "name": "TyC Sports",
+      "country": "Argentina",
+      "logo": null,
+      "streamUrl": "https://rci1w.envivoslatam.org/lb03/tycsports/index.m3u8?token=fac8af62bc914e41b0bd7f3243b8c3e95909676e-80-1780469526-1780415526&ip=181.118.186.80",
+      "note": "Disponible durante el Mundial"
+    }
+  ]
+}

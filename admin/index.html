@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DashTV Admin</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, 'Segoe UI', system-ui, sans-serif; background: #0A0A0A; color: #FFFFFF; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+.hidden { display: none !important; }
+
+/* Login */
+#loginScreen { width: 380px; }
+#loginScreen h1 { color: #D4AF37; font-size: 28px; letter-spacing: 3px; text-align: center; margin-bottom: 8px; }
+#loginScreen p { color: #A0A0A0; text-align: center; margin-bottom: 30px; font-size: 14px; }
+#loginScreen input { width: 100%; padding: 14px 16px; background: #151515; border: 1px solid #333; border-radius: 8px; color: #FFF; font-size: 16px; margin-bottom: 16px; outline: none; }
+#loginScreen input:focus { border-color: #D4AF37; }
+#loginScreen button { width: 100%; padding: 14px; background: #D4AF37; color: #000; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; letter-spacing: 1px; }
+#loginScreen button:hover { background: #C4A030; }
+#loginError { color: #FF4444; font-size: 13px; text-align: center; margin-top: 12px; }
+
+/* Admin panel */
+#adminScreen { width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
+header { display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; border-bottom: 1px solid #222; }
+header h1 { color: #D4AF37; font-size: 22px; letter-spacing: 2px; }
+header span { color: #A0A0A0; font-size: 13px; }
+header button { padding: 8px 18px; background: transparent; border: 1px solid #444; border-radius: 6px; color: #A0A0A0; cursor: pointer; font-size: 13px; }
+header button:hover { border-color: #D4AF37; color: #D4AF37; }
+
+nav { display: flex; gap: 4px; padding: 20px 40px 0; border-bottom: 1px solid #222; }
+nav button { padding: 10px 24px; background: transparent; border: none; color: #A0A0A0; font-size: 14px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; letter-spacing: 1px; }
+nav button:hover { color: #FFF; }
+nav button.active { color: #D4AF37; border-bottom-color: #D4AF37; }
+
+main { flex: 1; padding: 30px 40px; }
+.tab { display: none; }
+.tab.active { display: block; }
+
+h2 { color: #FFF; font-size: 20px; margin-bottom: 20px; }
+
+/* Codes table */
+.toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+.toolbar select, .toolbar input { padding: 10px 14px; background: #151515; border: 1px solid #333; border-radius: 6px; color: #FFF; font-size: 14px; outline: none; }
+.toolbar select:focus, .toolbar input:focus { border-color: #D4AF37; }
+.btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; letter-spacing: 0.5px; }
+.btn-gold { background: #D4AF37; color: #000; }
+.btn-gold:hover { background: #C4A030; }
+.btn-danger { background: #CC3333; color: #FFF; }
+.btn-danger:hover { background: #AA2222; }
+.btn-outline { background: transparent; border: 1px solid #444; color: #A0A0A0; }
+.btn-outline:hover { border-color: #D4AF37; color: #D4AF37; }
+
+table { width: 100%; border-collapse: collapse; }
+thead th { text-align: left; padding: 12px 14px; color: #A0A0A0; font-size: 12px; font-weight: 600; letter-spacing: 1px; border-bottom: 1px solid #333; }
+tbody td { padding: 12px 14px; border-bottom: 1px solid #1A1A1A; font-size: 14px; }
+.status-active { color: #4CAF50; font-weight: 600; }
+.status-redeemed { color: #D4AF37; font-weight: 600; }
+.status-expired { color: #A0A0A0; }
+.status-revoked { color: #CC3333; }
+
+.empty { color: #A0A0A0; text-align: center; padding: 60px 0; font-size: 15px; }
+
+/* Channels */
+.channel-card { background: #151515; border: 1px solid #222; border-radius: 10px; padding: 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 20px; }
+.channel-card .info { flex: 1; min-width: 0; }
+.channel-card .name { color: #FFF; font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.channel-card .meta { color: #A0A0A0; font-size: 12px; }
+.channel-card input { flex: 1; padding: 10px 14px; background: #0A0A0A; border: 1px solid #333; border-radius: 6px; color: #FFF; font-size: 13px; min-width: 200px; outline: none; }
+.channel-card input:focus { border-color: #D4AF37; }
+.channel-card .actions { display: flex; gap: 8px; }
+
+/* Settings */
+.setting-group { background: #151515; border: 1px solid #222; border-radius: 10px; padding: 24px; margin-bottom: 20px; }
+.setting-group h3 { color: #FFF; font-size: 16px; margin-bottom: 16px; }
+.setting-group label { display: block; color: #A0A0A0; font-size: 13px; margin-bottom: 6px; }
+.setting-group input[type="password"] { width: 100%; max-width: 400px; padding: 12px 14px; background: #0A0A0A; border: 1px solid #333; border-radius: 6px; color: #FFF; font-size: 14px; margin-bottom: 12px; outline: none; }
+.setting-group input:focus { border-color: #D4AF37; }
+
+.toast { position: fixed; bottom: 30px; right: 30px; padding: 14px 24px; border-radius: 8px; color: #FFF; font-size: 14px; font-weight: 600; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; }
+.toast-success { background: #2E7D32; }
+.toast-error { background: #C62828; }
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginScreen">
+  <h1>DashTV</h1>
+  <p>Panel de Administración</p>
+  <input type="password" id="passwordInput" placeholder="Contraseña" autofocus>
+  <button onclick="login()">INGRESAR</button>
+  <div id="loginError"></div>
+</div>
+
+<!-- Admin -->
+<div id="adminScreen" class="hidden">
+  <header>
+    <h1>DashTV · Admin</h1>
+    <span id="statusBadge">Conectado</span>
+    <button onclick="logout()">Cerrar sesión</button>
+  </header>
+  <nav>
+    <button class="active" data-tab="codes" onclick="switchTab('codes')">CÓDIGOS</button>
+    <button data-tab="channels" onclick="switchTab('channels')">CANALES</button>
+    <button data-tab="settings" onclick="switchTab('settings')">AJUSTES</button>
+  </nav>
+  <main>
+
+    <!-- Codes tab -->
+    <div id="tabCodes" class="tab active">
+      <div class="toolbar">
+        <button class="btn btn-gold" onclick="createCode()">+ Generar código</button>
+        <select id="durationSelect">
+          <option value="7">7 días</option>
+          <option value="30" selected>30 días</option>
+          <option value="60">60 días</option>
+          <option value="90">90 días</option>
+        </select>
+        <select id="statusFilter" onchange="renderCodes()">
+          <option value="all">Todos los estados</option>
+          <option value="active">Activos</option>
+          <option value="redeemed">Canjeados</option>
+          <option value="expired">Expirados</option>
+          <option value="revoked">Revocados</option>
+        </select>
+      </div>
+      <div id="codesContainer"></div>
+    </div>
+
+    <!-- Channels tab -->
+    <div id="tabChannels" class="tab">
+      <p style="color:#A0A0A0;margin-bottom:20px;font-size:13px;">Editá las URLs de streaming de cada canal. Los cambios se guardan automáticamente.</p>
+      <div id="channelsContainer"></div>
+      <button class="btn btn-gold" onclick="saveChannels()" style="margin-top:16px;">Guardar cambios</button>
+    </div>
+
+    <!-- Settings tab -->
+    <div id="tabSettings" class="tab">
+      <div class="setting-group">
+        <h3>Cambiar contraseña</h3>
+        <label>Contraseña actual</label>
+        <input type="password" id="currentPassword">
+        <label>Nueva contraseña</label>
+        <input type="password" id="newPassword">
+        <button class="btn btn-gold" onclick="changePassword()">Actualizar contraseña</button>
+      </div>
+      <div class="setting-group">
+        <h3>Información del servidor</h3>
+        <p style="color:#A0A0A0;font-size:13px;line-height:1.6;">
+          Proxy API: <code style="color:#D4AF37;">http://localhost:4000/get/*</code><br>
+          Admin: <code style="color:#D4AF37;">http://localhost:4000/admin</code><br>
+          Códigos activos: <span id="statsActive">0</span><br>
+          Códigos canjeados: <span id="statsRedeemed">0</span>
+        </p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+let token = null;
+
+// ─── Login ──────────────────────────────────────────────────
+async function login() {
+  const password = document.getElementById('passwordInput').value;
+  const errorEl = document.getElementById('loginError');
+  errorEl.textContent = '';
+  try {
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      token = data.token;
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('adminScreen').classList.remove('hidden');
+      loadData();
+    } else {
+      errorEl.textContent = 'Contraseña incorrecta';
+    }
+  } catch (e) {
+    errorEl.textContent = 'Error de conexión con el servidor';
+  }
+}
+
+function logout() {
+  token = null;
+  document.getElementById('adminScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('passwordInput').value = '';
+}
+
+// ─── Tabs ───────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('nav button').forEach((b) => b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+  document.querySelector(`nav button[data-tab="${name}"]`).classList.add('active');
+  document.getElementById(`tab${name.charAt(0).toUpperCase() + name.slice(1)}`).classList.add('active');
+  if (name === 'codes') renderCodes();
+  if (name === 'channels') renderChannels();
+}
+
+// ─── Toast ──────────────────────────────────────────────────
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast toast-${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ─── Auth header ────────────────────────────────────────────
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+}
+
+// ─── Load all data ──────────────────────────────────────────
+async function loadData() {
+  await Promise.all([renderCodes(), renderChannels(), updateStats()]);
+}
+
+// ─── Stats ──────────────────────────────────────────────────
+async function updateStats() {
+  try {
+    const res = await fetch('/api/admin/codes', { headers: authHeaders() });
+    const codes = await res.json();
+    document.getElementById('statsActive').textContent = codes.filter((c) => c.status === 'active').length;
+    document.getElementById('statsRedeemed').textContent = codes.filter((c) => c.status === 'redeemed').length;
+  } catch {}
+}
+
+// ─── Codes ──────────────────────────────────────────────────
+let codesData = [];
+
+async function renderCodes() {
+  try {
+    const res = await fetch('/api/admin/codes', { headers: authHeaders() });
+    codesData = await res.json();
+  } catch { return; }
+
+  const filter = document.getElementById('statusFilter').value;
+  const filtered = filter === 'all' ? codesData : codesData.filter((c) => c.status === filter);
+  const container = document.getElementById('codesContainer');
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty">No hay códigos' + (filter !== 'all' ? ' con ese estado' : ' todavía. Generá el primero.') + '</div>';
+    return;
+  }
+
+  let html = `<table>
+    <thead><tr>
+      <th>CÓDIGO</th><th>ESTADO</th><th>CREADO</th><th>EXPIRA</th><th>DISPOSITIVO</th><th></th>
+    </tr></thead><tbody>`;
+
+  for (const c of filtered) {
+    const statusClass = `status-${c.status}`;
+    const statusLabels = { active: 'Activo', redeemed: 'Canjeado', expired: 'Expirado', revoked: 'Revocado' };
+    const created = new Date(c.createdAt).toLocaleDateString('es-AR');
+    const expires = new Date(c.expiresAt).toLocaleDateString('es-AR');
+    const device = c.deviceName || (c.status === 'redeemed' ? c.deviceId : '—');
+    html += `<tr>
+      <td style="font-weight:600;letter-spacing:1px;color:#D4AF37;font-family:monospace;">${c.code}</td>
+      <td><span class="${statusClass}">${statusLabels[c.status] || c.status}</span></td>
+      <td style="color:#A0A0A0">${created}</td>
+      <td style="color:#A0A0A0">${expires}</td>
+      <td style="color:#A0A0A0">${device}</td>
+      <td>${c.status === 'active' ? `<button class="btn btn-danger" style="padding:6px 14px;font-size:12px;" onclick="revokeCode('${c.id}')">Revocar</button>` : c.status === 'redeemed' ? `<button class="btn btn-danger" style="padding:6px 14px;font-size:12px;" onclick="disconnectCode('${c.id}')">Desconectar</button>` : ''}</td>
+    </tr>`;
+  }
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+  updateStats();
+}
+
+async function createCode() {
+  const days = parseInt(document.getElementById('durationSelect').value);
+  try {
+    const res = await fetch('/api/admin/codes', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ days }),
+    });
+    const code = await res.json();
+    if (code.id) {
+      showToast(`Código generado: ${code.code}`, 'success');
+      renderCodes();
+    }
+  } catch {
+    showToast('Error al generar código', 'error');
+  }
+}
+
+async function revokeCode(id) {
+  if (!confirm('¿Revocar este código?')) return;
+  try {
+    await fetch(`/api/admin/codes/${id}`, { method: 'DELETE', headers: authHeaders() });
+    showToast('Código revocado', 'success');
+    renderCodes();
+  } catch {
+    showToast('Error al revocar', 'error');
+  }
+}
+
+async function disconnectCode(id) {
+  if (!confirm('¿Desconectar este dispositivo? La suscripción se cancelará.')) return;
+  try {
+    await fetch(`/api/admin/codes/${id}`, { method: 'DELETE', headers: authHeaders() });
+    showToast('Dispositivo desconectado', 'success');
+    renderCodes();
+  } catch {
+    showToast('Error al desconectar', 'error');
+  }
+}
+
+// ─── Channels ───────────────────────────────────────────────
+let channelsData = [];
+
+async function renderChannels() {
+  try {
+    const res = await fetch('/api/admin/channels', { headers: authHeaders() });
+    channelsData = await res.json();
+  } catch { return; }
+
+  const container = document.getElementById('channelsContainer');
+  container.innerHTML = channelsData.map((ch, i) => `
+    <div class="channel-card">
+      <div class="info">
+        <div class="name">${ch.name}</div>
+        <div class="meta">${ch.country || ''} ${ch.note ? '· ' + ch.note : ''}</div>
+      </div>
+      <input type="text" value="${ch.streamUrl || ''}" placeholder="URL del stream (m3u8)" data-index="${i}" onchange="updateChannel(${i}, this.value)">
+      <div class="actions">
+        <button class="btn btn-outline" style="padding:6px 12px;font-size:12px;" onclick="clearChannel(${i})">Limpiar</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateChannel(idx, value) {
+  if (channelsData[idx]) channelsData[idx].streamUrl = value || null;
+}
+
+function clearChannel(idx) {
+  if (channelsData[idx]) channelsData[idx].streamUrl = null;
+  renderChannels();
+}
+
+async function saveChannels() {
+  try {
+    const res = await fetch('/api/admin/channels', {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ channels: channelsData }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Canales actualizados', 'success');
+    }
+  } catch {
+    showToast('Error al guardar', 'error');
+  }
+}
+
+// ─── Password ───────────────────────────────────────────────
+async function changePassword() {
+  const current = document.getElementById('currentPassword').value;
+  const newPw = document.getElementById('newPassword').value;
+  if (!current || !newPw) { showToast('Completá ambos campos', 'error'); return; }
+  if (newPw.length < 4) { showToast('La nueva contraseña debe tener al menos 4 caracteres', 'error'); return; }
+  try {
+    const res = await fetch('/api/admin/password', {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ currentPassword: current, newPassword: newPw }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Contraseña actualizada', 'success');
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+    } else {
+      showToast(data.error || 'Error', 'error');
+    }
+  } catch {
+    showToast('Error al cambiar contraseña', 'error');
+  }
+}
+
+// ─── Enter key login ────────────────────────────────────────
+document.getElementById('passwordInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') login();
+});
+</script>
+</body>
+</html>

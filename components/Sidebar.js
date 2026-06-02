@@ -1,0 +1,31 @@
+import { View, StyleSheet, useWindowDimensions } from 'react-native';
+import StatsPanel from './StatsPanel';
+import GroupTable from './GroupTable';
+import UpcomingMatches from './UpcomingMatches';
+import { COLORS } from '../constants/theme';
+
+export default function Sidebar({ match, matches }) {
+  const { width: windowWidth } = useWindowDimensions();
+  const scale = Math.min(1, Math.max(0.7, windowWidth / 1920));
+  const sideW = 440 * scale;
+  const sidePad = 35 * scale;
+  const sideTop = 40 * scale;
+
+  return (
+    <View style={[styles.sidebar, { width: sideW, padding: sidePad, top: sideTop, right: sideTop, height: windowWidth > 800 ? 1000 : undefined }]}>
+      {match && <StatsPanel match={match} />}
+      <GroupTable />
+      <UpcomingMatches matches={matches} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  sidebar: {
+    position: 'absolute',
+    backgroundColor: COLORS.panel,
+    borderLeftWidth: 1,
+    borderLeftColor: COLORS.border,
+    gap: 25,
+  },
+});
