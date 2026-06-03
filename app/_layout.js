@@ -16,7 +16,7 @@ export default function RootLayout() {
     (async () => {
       const result = await checkSubscription();
       setValid(result.valid);
-      if (result.valid) await loadChannels();
+      await loadChannels();
       setChecked(true);
     })();
   }, []);
@@ -37,7 +37,7 @@ export default function RootLayout() {
     if (segments[0] !== 'activate') {
       checkSubscription().then((r) => {
         setValid(r.valid);
-        if (r.valid) loadChannels();
+        loadChannels();
       });
     }
   }, [segments]);
