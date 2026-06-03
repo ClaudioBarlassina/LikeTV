@@ -16,9 +16,6 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
   const { width: windowWidth } = useWindowDimensions();
   const scale = Math.min(1, Math.max(0.7, windowWidth / 1920));
   const [status, setStatus] = useState('idle');
-  const [localMuted, setLocalMuted] = useState(muted);
-
-  const isMuted = localMuted;
 
   const channel = CHANNELS.find((c) => c.id === channelId) || CHANNELS[0];
   const streamUrl = channel?.streamUrl || null;
@@ -39,8 +36,8 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
   }, [playerStatus]);
 
   useEffect(() => {
-    if (player) player.muted = isMuted;
-  }, [isMuted, player]);
+    if (player) player.muted = muted;
+  }, [muted, player]);
 
   useEffect(() => {
     return () => {
@@ -76,13 +73,6 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
             </Pressable>
           );
         })}
-        <View style={{ flex: 1 }} />
-        <Pressable
-          style={[styles.muteBtn, { padding: 2 * scale, borderRadius: 4 * scale }]}
-          onPress={() => setLocalMuted((v) => !v)}
-        >
-          <Text style={[styles.muteIcon, { fontSize: 14 * scale }]}>{isMuted ? '🔇' : '🔊'}</Text>
-        </Pressable>
       </View>
 
       {/* Video / Placeholder */}
@@ -212,8 +202,5 @@ const styles = StyleSheet.create({
   },
   infoText: { color: COLORS.dim, fontSize: 11, fontWeight: '600' },
   infoDate: { color: COLORS.gold, fontSize: 11, fontWeight: '700' },
-  muteBtn: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  muteIcon: {},
+
 });

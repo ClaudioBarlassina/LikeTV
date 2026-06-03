@@ -34,9 +34,6 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
   const channel = CHANNELS.find((c) => c.id === channelId) || CHANNELS[0];
   const streamUrl = channel?.streamUrl || null;
   const fallbackRef = useRef(false);
-  const [localMuted, setLocalMuted] = useState(muted);
-
-  const isMuted = localMuted;
 
   useEffect(() => {
     loadHls().then(() => setHlsReady(true)).catch(() => {});
@@ -167,13 +164,6 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
             </Pressable>
           );
         })}
-        <View style={{ flex: 1 }} />
-        <Pressable
-          style={[styles.muteBtn, { padding: 2 * scale, borderRadius: 4 * scale }]}
-          onPress={() => setLocalMuted((v) => !v)}
-        >
-          <Text style={[styles.muteIcon, { fontSize: 14 * scale }]}>{isMuted ? '🔇' : '🔊'}</Text>
-        </Pressable>
       </View>
 
       {streamUrl ? (
@@ -181,7 +171,7 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
           ref={videoRef}
           style={styles.video}
           autoPlay
-          muted={isMuted}
+          muted={muted}
           playsInline
         />
       ) : (
@@ -283,8 +273,5 @@ const styles = StyleSheet.create({
   },
   infoText: { color: COLORS.dim, fontWeight: '600' },
   infoDate: { color: COLORS.gold, fontWeight: '700' },
-  muteBtn: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  muteIcon: {},
+
 });

@@ -23,6 +23,9 @@ export default function LiveMatch() {
   const [layout, setLayout] = useState('full');
   const [giant, setGiant] = useState(false);
   const [focusKey, setFocusKey] = useState(0);
+  const [mutedA, setMutedA] = useState(false);
+  const [mutedB, setMutedB] = useState(true);
+  const [mutedC, setMutedC] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
@@ -75,15 +78,19 @@ export default function LiveMatch() {
       setMatchB(matchA);
       setChannelA(channelB);
       setChannelB(channelA);
+      setMutedA(mutedB);
+      setMutedB(mutedA);
       setFocused('A');
     } else if (target === 'C') {
       setMatchA(matchC);
       setMatchC(matchA);
       setChannelA(channelC);
       setChannelC(channelA);
+      setMutedA(mutedC);
+      setMutedC(mutedA);
       setFocused('A');
     }
-  }, [matchA, matchB, matchC, channelA, channelB, channelC]);
+  }, [matchA, matchB, matchC, channelA, channelB, channelC, mutedA, mutedB, mutedC]);
 
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const compact = windowWidth < COMPACT_BREAK;
@@ -140,11 +147,22 @@ export default function LiveMatch() {
                 <VideoPanel
                   key={`full-${focusKey}`}
                   match={matchA} channelId={channelA} onChannelChange={setChannelA}
-                  onFocus={() => setFocused('A')} focused muted={false}
+                  onFocus={() => setFocused('A')} focused muted={mutedA}
                 />
-                <Pressable style={[styles.giantBtn, { top: compact ? 4 : 8, right: compact ? 4 : 8, paddingHorizontal: compact ? 6 : 10 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]} onPress={() => setGiant(true)} onFocus={() => setGiant(true)}>
-                  <Text style={[styles.giantBtnText, { fontSize: compact ? 13 : 14 * scale }]}>⛶</Text>
-                </Pressable>
+                <View style={[styles.topControls, { top: compact ? 4 : 8, right: compact ? 4 : 8 }]}>
+                  <Pressable
+                    style={[styles.ctrlBtn, { paddingHorizontal: compact ? 6 : 10 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
+                    onPress={() => setMutedA(v => !v)}
+                  >
+                    <Text style={[styles.ctrlBtnText, { fontSize: compact ? 12 : 13 * scale }]}>{mutedA ? '🔇' : '🔊'}</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.ctrlBtn, { paddingHorizontal: compact ? 6 : 10 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
+                    onPress={() => setGiant(true)}
+                  >
+                    <Text style={[styles.ctrlBtnText, { fontSize: compact ? 12 : 13 * scale }]}>⛶</Text>
+                  </Pressable>
+                </View>
               </View>
             )}
 
@@ -155,16 +173,32 @@ export default function LiveMatch() {
                   <VideoPanel
                     key={`split-a-${focusKey}`}
                     match={matchA} channelId={channelA} onChannelChange={setChannelA}
-                    onFocus={() => setFocused('A')} focused={focused === 'A'} muted={false}
+                    onFocus={() => setFocused('A')} focused={focused === 'A'} muted={mutedA}
                   />
+                  <View style={[styles.topControls, { top: compact ? 4 : 8, right: compact ? 4 : 8 }]}>
+                    <Pressable
+                      style={[styles.ctrlBtn, { paddingHorizontal: compact ? 6 : 10 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
+                      onPress={() => setMutedA(v => !v)}
+                    >
+                      <Text style={[styles.ctrlBtnText, { fontSize: compact ? 12 : 13 * scale }]}>{mutedA ? '🔇' : '🔊'}</Text>
+                    </Pressable>
+                  </View>
                 </View>
                 {!compact && <View style={styles.divider} />}
                 <View style={styles.splitHalf}>
                   <VideoPanel
                     key={`split-b-${focusKey}`}
                     match={matchB} channelId={channelB} onChannelChange={setChannelB}
-                    onFocus={() => setFocused('B')} focused={focused === 'B'} muted={false}
+                    onFocus={() => setFocused('B')} focused={focused === 'B'} muted={mutedB}
                   />
+                  <View style={[styles.topControls, { top: compact ? 4 : 8, right: compact ? 4 : 8 }]}>
+                    <Pressable
+                      style={[styles.ctrlBtn, { paddingHorizontal: compact ? 6 : 10 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
+                      onPress={() => setMutedB(v => !v)}
+                    >
+                      <Text style={[styles.ctrlBtnText, { fontSize: compact ? 12 : 13 * scale }]}>{mutedB ? '🔇' : '🔊'}</Text>
+                    </Pressable>
+                  </View>
                 </View>
               </View>
             )}
@@ -176,8 +210,16 @@ export default function LiveMatch() {
                   <VideoPanel
                     key={`triple-a-${focusKey}`}
                     match={matchA} channelId={channelA} onChannelChange={setChannelA}
-                    onFocus={() => setFocused('A')} focused={focused === 'A'} muted={false}
+                    onFocus={() => setFocused('A')} focused={focused === 'A'} muted={mutedA}
                   />
+                  <View style={[styles.topControls, { top: compact ? 4 : 8, right: compact ? 4 : 8 }]}>
+                    <Pressable
+                      style={[styles.ctrlBtn, { paddingHorizontal: compact ? 6 : 10 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
+                      onPress={() => setMutedA(v => !v)}
+                    >
+                      <Text style={[styles.ctrlBtnText, { fontSize: compact ? 12 : 13 * scale }]}>{mutedA ? '🔇' : '🔊'}</Text>
+                    </Pressable>
+                  </View>
                 </View>
                 {!compact && <View style={styles.dividerSm} />}
                 <View style={styles.tripleSide}>
@@ -185,14 +227,14 @@ export default function LiveMatch() {
                     <VideoPanel
                       key={`triple-b-${focusKey}`}
                       match={matchB} channelId={channelB} onChannelChange={setChannelB}
-                      onFocus={() => promoteToMain('B')} focused={false} muted
+                      onFocus={() => promoteToMain('B')} focused={false} muted={mutedB}
                     />
                   </View>
                   <View style={styles.tripleSmall}>
                     <VideoPanel
                       key={`triple-c-${focusKey}`}
                       match={matchC} channelId={channelC} onChannelChange={setChannelC}
-                      onFocus={() => promoteToMain('C')} focused={false} muted
+                      onFocus={() => promoteToMain('C')} focused={false} muted={mutedC}
                     />
                   </View>
                 </View>
@@ -225,11 +267,22 @@ export default function LiveMatch() {
           <VideoPanel
             key={`giant-${focusKey}`}
             match={matchA} channelId={channelA} onChannelChange={setChannelA}
-            onFocus={() => setFocused('A')} focused muted={false}
+            onFocus={() => setFocused('A')} focused muted={mutedA}
           />
-          <Pressable style={[styles.giantBtn, { top: compact ? 10 : 20, right: compact ? 10 : 20, paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 5 : 8 * scale, borderRadius: compact ? 4 : 6 * scale }]} onPress={() => setGiant(false)}>
-            <Text style={[styles.giantBtnText, { fontSize: compact ? 11 : 11 * scale }]}>SALIR</Text>
-          </Pressable>
+          <View style={[styles.topControls, { top: compact ? 10 : 20, right: compact ? 10 : 20 }]}>
+            <Pressable
+              style={[styles.ctrlBtn, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 5 : 8 * scale, borderRadius: compact ? 4 : 6 * scale }]}
+              onPress={() => setMutedA(v => !v)}
+            >
+              <Text style={[styles.ctrlBtnText, { fontSize: compact ? 12 : 13 * scale }]}>{mutedA ? '🔇' : '🔊'}</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.ctrlBtn, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 5 : 8 * scale, borderRadius: compact ? 4 : 6 * scale }]}
+              onPress={() => setGiant(false)}
+            >
+              <Text style={[styles.ctrlBtnText, { fontSize: compact ? 11 : 11 * scale }]}>SALIR</Text>
+            </Pressable>
+          </View>
         </View>
       )}
 
@@ -262,9 +315,11 @@ const styles = StyleSheet.create({
   mainRow: {
     flex: 1,
     flexDirection: 'row',
+    overflow: 'hidden',
   },
   videoArea: {
     flex: 1,
+    paddingBottom: 4,
   },
 
   // Full
@@ -309,21 +364,27 @@ const styles = StyleSheet.create({
     marginHorizontal: 9,
   },
 
-  // Giant
+  // Top controls (volume + giant)
+  topControls: {
+    position: 'absolute',
+    flexDirection: 'row',
+    gap: 4,
+    zIndex: 110,
+  },
+  ctrlBtn: {
+    backgroundColor: COLORS.panel,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  ctrlBtnText: { color: COLORS.gold, fontWeight: '600', letterSpacing: 1 },
+
+  // Giant overlay
   giantContainer: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
     zIndex: 100,
     padding: 0,
   },
-  giantBtn: {
-    position: 'absolute',
-    backgroundColor: COLORS.panel,
-    borderWidth: 1,
-    borderColor: '#333',
-    zIndex: 110,
-  },
-  giantBtnText: { color: COLORS.gold, fontWeight: '600', letterSpacing: 1 },
 
   // Bottom
   bottomRow: {
