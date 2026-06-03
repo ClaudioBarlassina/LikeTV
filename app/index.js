@@ -24,16 +24,30 @@ export default function LiveMatch() {
   const [layout, setLayout] = useState('full');
   const [giant, setGiant] = useState(false);
   const [focusKey, setFocusKey] = useState(0);
+  const [chVer, setChVer] = useState(0);
 
+  // Refresh channels & trigger re-render when gaining focus (e.g. returning from admin same tab)
   useFocusEffect(
     useCallback(() => {
       let active = true;
       loadChannels(true).then(() => {
-        if (active) setFocusKey((k) => k + 1);
+        if (active) setChVer((v) => v + 1);
       });
       return () => { active = false; };
     }, [])
   );
+
+  // Poll channels every 30s (catches admin changes in another tab)
+  useEffect(() => {
+    let active = true;
+    const poll = async () => {
+      await loadChannels(true);
+      if (active) setChVer((v) => v + 1);
+    };
+    poll();
+    const id = setInterval(poll, 30000);
+    return () => { active = false; clearInterval(id); };
+  }, []);
 
   const matchARef = useRef(null);
   const matchBRef = useRef(null);
