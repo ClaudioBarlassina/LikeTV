@@ -115,11 +115,12 @@ function fetchStreamWithRedirect(targetUrl, res, redirects = 0) {
       proxyRes.on('end', () => {
         const body = Buffer.concat(chunks).toString('utf8');
         const base = targetUrl.href.substring(0, targetUrl.href.lastIndexOf('/') + 1);
+        const qs = targetUrl.search || '';
         const proxyBase = '/proxy/video?url=';
         const rewritten = body.split('\n').map((line) => {
           const t = line.trim();
           if (t && !t.startsWith('#') && !t.startsWith('http://') && !t.startsWith('https://')) {
-            const fullUrl = t.startsWith('/') ? new URL(t, targetUrl.origin).href : base + t;
+            const fullUrl = (t.startsWith('/') ? new URL(t, targetUrl.origin).href : base + t) + qs;
             return proxyBase + encodeURIComponent(fullUrl);
           }
           return line;
