@@ -80,7 +80,7 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
         <VideoView
           player={player}
           style={styles.video}
-          contentFit="cover"
+          contentFit="contain"
           nativeControls={false}
           allowsVideoFrameAnalysis={false}
           {...(Platform.isTV ? { focusable: false } : {})}

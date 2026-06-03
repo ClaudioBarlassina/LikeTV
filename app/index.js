@@ -114,7 +114,7 @@ export default function LiveMatch() {
   const hasContent = matches.some((m) => m.status !== 'upcoming');
   const bottomH = hasContent
     ? (compact ? 110 : 200 * scale)
-    : (compact ? 100 : 150);
+    : (compact ? 80 : 90);
 
   return (
     <View style={[styles.container, { padding }]}>
@@ -352,6 +352,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.panel,
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: 100,
+    minHeight: 80,
   },
 });

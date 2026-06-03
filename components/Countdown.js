@@ -53,12 +53,12 @@ export default function Countdown() {
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', paddingVertical: 20 },
-  label: { color: COLORS.dim, fontSize: 14, fontWeight: '600', letterSpacing: 3, marginBottom: 12 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  block: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, minWidth: 50 },
-  num: { color: COLORS.gold, fontSize: 28, fontWeight: '800' },
+  container: { alignItems: 'center', paddingVertical: 2 },
+  label: { color: COLORS.dim, fontSize: 12, fontWeight: '600', letterSpacing: 2, marginBottom: 6 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  block: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, minWidth: 44 },
+  num: { color: COLORS.gold, fontSize: 22, fontWeight: '800' },
   unit: { color: COLORS.dim, fontSize: 9, fontWeight: '600', letterSpacing: 1, marginTop: 2 },
-  colon: { color: COLORS.gold, fontSize: 24, fontWeight: '800', marginBottom: 14 },
-  date: { color: COLORS.dim, fontSize: 12, marginTop: 10, fontStyle: 'italic' },
+  colon: { color: COLORS.gold, fontSize: 20, fontWeight: '800', marginBottom: 12 },
+  date: { color: COLORS.dim, fontSize: 11, marginTop: 6, fontStyle: 'italic' },
 });
