@@ -20,7 +20,7 @@ export default function Activate() {
     const data = await activateCode(code.trim().toUpperCase());
     setResult(data);
     if (data.success) {
-      await loadChannels();
+      await loadChannels(true);
     }
     setLoading(false);
   };

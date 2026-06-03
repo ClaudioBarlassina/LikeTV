@@ -35,9 +35,9 @@ export default function RootLayout() {
   useEffect(() => {
     if (!checked) return;
     if (segments[0] !== 'activate') {
-      checkSubscription().then((r) => {
+      checkSubscription().then(async (r) => {
         setValid(r.valid);
-        loadChannels();
+        await loadChannels(true);
       });
     }
   }, [segments]);

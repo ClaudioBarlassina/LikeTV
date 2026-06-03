@@ -20,8 +20,9 @@ export const CHANNELS = [...DEFAULTS];
 
 let _loaded = false;
 
-export async function loadChannels() {
-  if (_loaded) return;
+export async function loadChannels(force = false) {
+  if (_loaded && !force) return;
+  _loaded = false;
   try {
     const server = await getChannelsFromServer();
     if (server && server.length > 0) {
