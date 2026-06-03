@@ -5,7 +5,7 @@ const IS_WEB = typeof window !== 'undefined' && !!window.document;
 // En web usa el hostname dinámico (anda local y en Render)
 // En native apunta al server deployado — cambiá RENDER_URL cuando deployes
 const PROXY_PORT = 4000;
-const RENDER_URL = 'http://192.168.120.107:4000'; // ⚠ Reemplazar por https://dashtv.onrender.com al deployar
+const RENDER_URL = 'https://dashtv.onrender.com';
 const API_BASE = IS_WEB
   ? `http://${window.location.hostname}:${PROXY_PORT}`
   : RENDER_URL;
