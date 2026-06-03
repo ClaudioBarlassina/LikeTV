@@ -98,33 +98,36 @@ export default function LiveMatch() {
     <View style={[styles.container, { padding }]}>
       {!giant && <NavBar />}
 
+      {/* Layout bar between NavBar and video */}
+      {!giant && (
+        <View style={[styles.layoutBar, { paddingVertical: compact ? 2 : 6 * scale, paddingHorizontal: compact ? 6 : 4 }]}>
+          <Pressable
+            style={[styles.layoutBtn, layout === 'full' && styles.layoutBtnActive, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
+            onPress={() => { setLayout('full'); setGiant(false); }}
+            onFocus={() => { setLayout('full'); }}
+          >
+            <Text style={[styles.layoutLabel, layout === 'full' && styles.layoutLabelActive, { fontSize: compact ? 11 : 11 * scale }]}>FULL</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.layoutBtn, layout === 'split' && styles.layoutBtnActive, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
+            onPress={() => { setLayout('split'); setGiant(false); }}
+            onFocus={() => { setLayout('split'); }}
+          >
+            <Text style={[styles.layoutLabel, layout === 'split' && styles.layoutLabelActive, { fontSize: compact ? 11 : 11 * scale }]}>SPLIT</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.layoutBtn, layout === 'triple' && styles.layoutBtnActive, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
+            onPress={() => { setLayout('triple'); setGiant(false); }}
+            onFocus={() => { setLayout('triple'); }}
+          >
+            <Text style={[styles.layoutLabel, layout === 'triple' && styles.layoutLabelActive, { fontSize: compact ? 11 : 11 * scale }]}>1+2</Text>
+          </Pressable>
+        </View>
+      )}
+
       {/* Main content: video + sidebar */}
       {!giant && (
         <View style={styles.mainRow}>
-          {/* Layout toggle over video */}
-          <View style={[styles.layoutToggle, { top: compact ? 4 : 8, left: compact ? 6 : 4 }]}>
-            <Pressable
-              style={[styles.layoutBtn, layout === 'full' && styles.layoutBtnActive, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 5 : 8 * scale, borderRadius: compact ? 4 : 6 * scale }]}
-              onPress={() => { setLayout('full'); setGiant(false); }}
-              onFocus={() => { setLayout('full'); }}
-            >
-              <Text style={[styles.layoutLabel, layout === 'full' && styles.layoutLabelActive, { fontSize: compact ? 11 : 11 * scale }]}>FULL</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.layoutBtn, layout === 'split' && styles.layoutBtnActive, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 5 : 8 * scale, borderRadius: compact ? 4 : 6 * scale }]}
-              onPress={() => { setLayout('split'); setGiant(false); }}
-              onFocus={() => { setLayout('split'); }}
-            >
-              <Text style={[styles.layoutLabel, layout === 'split' && styles.layoutLabelActive, { fontSize: compact ? 11 : 11 * scale }]}>SPLIT</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.layoutBtn, layout === 'triple' && styles.layoutBtnActive, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 5 : 8 * scale, borderRadius: compact ? 4 : 6 * scale }]}
-              onPress={() => { setLayout('triple'); setGiant(false); }}
-              onFocus={() => { setLayout('triple'); }}
-            >
-              <Text style={[styles.layoutLabel, layout === 'triple' && styles.layoutLabelActive, { fontSize: compact ? 11 : 11 * scale }]}>1+2</Text>
-            </Pressable>
-          </View>
           {/* Video panels */}
           <View style={styles.videoArea}>
 
@@ -236,11 +239,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.bg,
   },
-  layoutToggle: {
-    position: 'absolute',
-    zIndex: 50,
+  layoutBar: {
     flexDirection: 'row',
     gap: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.panel,
   },
   layoutBtn: {
     backgroundColor: COLORS.panel,
@@ -255,7 +259,6 @@ const styles = StyleSheet.create({
   mainRow: {
     flex: 1,
     flexDirection: 'row',
-    position: 'relative',
   },
   videoArea: {
     flex: 1,
