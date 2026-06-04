@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Platform, useWindowDimensions } from 'react-native';
-import { Link, usePathname } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, Platform, useWindowDimensions, Pressable } from 'react-native';
+import { usePathname, useRouter } from 'expo-router';
 import { COLORS } from '../constants/theme';
 
 const TABS = [
@@ -12,11 +11,10 @@ const TABS = [
 
 export default function NavBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { width: windowWidth } = useWindowDimensions();
   const scale = Math.min(1, Math.max(0.65, windowWidth / 1920));
   const isCompact = windowWidth < 800;
-  const isTV = Platform.isTV;
-  const [focusedIdx, setFocusedIdx] = useState(null);
 
   return (
     <View style={[styles.container, { paddingHorizontal: 40 * scale }]}>
@@ -26,11 +24,21 @@ export default function NavBar() {
           {TABS.map((tab, i) => {
             const isActive = pathname === tab.href;
             return (
-              <Link key={tab.href} href={tab.href} style={[styles.tab, isActive && styles.tabActive, focusedIdx === i && styles.tabFocused, { paddingHorizontal: 12, paddingVertical: 8 }]} onFocus={() => setFocusedIdx(i)} onBlur={() => setFocusedIdx(null)} {...(isTV && i === 0 ? { hasTVPreferredFocus: true } : {})}>
-                <Text style={[styles.tabText, isActive && styles.tabTextActive, { fontSize: 13 }]}>
+              <Pressable
+                key={tab.href}
+                onPress={() => router.push(tab.href)}
+                style={({ pressed, focused }) => [
+                  styles.tab,
+                  isActive && styles.tabActive,
+                  (pressed || focused) && styles.tabFocused,
+                  { paddingHorizontal: 10, paddingVertical: 5 }
+                ]}
+                {...(Platform.isTV && i === 0 ? { hasTVPreferredFocus: true } : {})}
+              >
+                <Text style={[styles.tabText, isActive && styles.tabTextActive, { fontSize: 12 }]}>
                   {tab.label}
                 </Text>
-              </Link>
+              </Pressable>
             );
           })}
         </ScrollView>
@@ -39,11 +47,21 @@ export default function NavBar() {
           {TABS.map((tab, i) => {
             const isActive = pathname === tab.href;
             return (
-              <Link key={tab.href} href={tab.href} style={[styles.tab, isActive && styles.tabActive, focusedIdx === i && styles.tabFocused, { paddingHorizontal: 25 * scale, paddingVertical: 8 * scale }]} onFocus={() => setFocusedIdx(i)} onBlur={() => setFocusedIdx(null)} {...(isTV && i === 0 ? { hasTVPreferredFocus: true } : {})}>
-                <Text style={[styles.tabText, isActive && styles.tabTextActive, { fontSize: 16 * scale }]}>
+              <Pressable
+                key={tab.href}
+                onPress={() => router.push(tab.href)}
+                style={({ pressed, focused }) => [
+                  styles.tab,
+                  isActive && styles.tabActive,
+                  (pressed || focused) && styles.tabFocused,
+                  { paddingHorizontal: 18 * scale, paddingVertical: 5 * scale }
+                ]}
+                {...(Platform.isTV && i === 0 ? { hasTVPreferredFocus: true } : {})}
+              >
+                <Text style={[styles.tabText, isActive && styles.tabTextActive, { fontSize: 14 * scale }]}>
                   {tab.label}
                 </Text>
-              </Link>
+              </Pressable>
             );
           })}
         </View>
@@ -70,16 +88,26 @@ const styles = StyleSheet.create({
   tabsScroll: { flex: 1 },
   tabs: {
     flexDirection: 'row',
-    gap: 5,
+    gap: 16,
   },
   tab: {
-    borderRadius: 6,
+    borderRadius: 20,
+    backgroundColor: COLORS.panel,
+    borderWidth: 1,
+    borderColor: '#555',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+    alignSelf: 'flex-start',
   },
   tabActive: {
     backgroundColor: COLORS.goldDim,
+    borderColor: COLORS.gold,
   },
   tabFocused: {
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: COLORS.gold,
   },
   tabText: {

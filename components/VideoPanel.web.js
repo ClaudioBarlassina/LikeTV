@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
 import { CHANNELS, extractDirectUrl } from '../constants/channels';
 import { COLORS } from '../constants/theme';
 
@@ -30,6 +30,8 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
   const hlsRef = useRef(null);
   const [status, setStatus] = useState('idle');
   const [hlsReady, setHlsReady] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const channel = CHANNELS.find((c) => c.id === channelId) || CHANNELS[0];
   const streamUrl = channel?.streamUrl || null;
@@ -130,8 +132,20 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
     };
   }, []);
 
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    function onDocClick(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [dropdownOpen]);
+
   const handleChannelChange = useCallback((id) => {
     onChannelChange?.(id);
+    setDropdownOpen(false);
   }, [onChannelChange]);
 
   const isLive = match?.status === 'live';
@@ -146,24 +160,40 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
       onPress={() => onFocus?.()}
       style={[styles.panel, focused && styles.panelFocused, { borderRadius: 8 * scale }]}
     >
-      <View style={[styles.channelStrip, { height: 34 * scale, paddingHorizontal: 8 * scale, gap: 4 * scale }]}>
-        {CHANNELS.map((ch) => {
-          const active = ch.id === channelId;
-          return (
-            <Pressable
-              key={ch.id}
-              style={[styles.chBtn, active && styles.chBtnActive, { paddingHorizontal: 10 * scale, paddingVertical: 4 * scale, borderRadius: 4 * scale, gap: 3 * scale }]}
-              onPress={() => handleChannelChange(ch.id)}
-            >
-              <Text style={[styles.chLabel, active && styles.chLabelActive, { fontSize: 11 * scale }]}>
-                {ch.name.toUpperCase()}
-              </Text>
-              {active && status === 'playing' && (
-                <Text style={[styles.liveDot, { fontSize: 7 * scale }]}>●</Text>
-              )}
-            </Pressable>
-          );
-        })}
+      <View ref={dropdownRef} style={[styles.channelStrip, { height: 34 * scale }]}>
+        <Pressable
+          style={[styles.dropdownTrigger, { paddingHorizontal: 10 * scale, paddingVertical: 4 * scale, borderRadius: 4 * scale }]}
+          onPress={() => setDropdownOpen((o) => !o)}
+        >
+          <Text style={[styles.dropdownTriggerText, { fontSize: 11 * scale }]}>
+            {channel.name.toUpperCase()}
+          </Text>
+          <Text style={[styles.dropdownArrow, { fontSize: 8 * scale }]}>▼</Text>
+        </Pressable>
+
+        {dropdownOpen && (
+          <View style={[styles.dropdownList, { top: 34 * scale, maxHeight: 200 * scale }]}>
+            <ScrollView>
+              {CHANNELS.map((ch) => {
+                const active = ch.id === channelId;
+                return (
+                  <Pressable
+                    key={ch.id}
+                    style={[styles.dropdownItem, active && styles.dropdownItemActive]}
+                    onPress={() => handleChannelChange(ch.id)}
+                  >
+                    <Text style={[styles.dropdownItemText, active && styles.dropdownItemTextActive, { fontSize: 11 * scale }]}>
+                      {ch.name}
+                    </Text>
+                    {active && status === 'playing' && (
+                      <Text style={[styles.liveDot, { fontSize: 7 * scale }]}>●</Text>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
       </View>
 
       {streamUrl ? (
@@ -224,15 +254,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     zIndex: 10,
+    position: 'relative',
   },
-  chBtn: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+  dropdownTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    gap: 6,
   },
-  chBtnActive: { backgroundColor: COLORS.goldDim },
-  chLabel: { color: COLORS.dim, fontWeight: '600', letterSpacing: 1 },
-  chLabelActive: { color: COLORS.gold },
+  dropdownTriggerText: { color: COLORS.white, fontWeight: '600', letterSpacing: 1 },
+  dropdownArrow: { color: COLORS.dim },
+  dropdownList: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    backgroundColor: COLORS.panel,
+    borderWidth: 1,
+    borderColor: '#444',
+    borderRadius: 6,
+    overflow: 'hidden',
+    zIndex: 20,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#222',
+  },
+  dropdownItemActive: { backgroundColor: COLORS.goldDim },
+  dropdownItemText: { color: COLORS.dim, fontWeight: '500' },
+  dropdownItemTextActive: { color: COLORS.gold },
   liveDot: { color: COLORS.live },
   video: { flex: 1, width: '100%', height: '100%' },
   placeholder: {

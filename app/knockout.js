@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Platform, Pressable, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { fetchLiveMatches } from '../services/api';
+import NavBar from '../components/NavBar';
 import { COLORS } from '../constants/theme';
 
 const ROUNDS = [
@@ -39,7 +40,9 @@ export default function Knockout() {
   }, [matches]);
 
   return (
-    <View style={[styles.container, { padding: isCompact ? 16 : 60 * scale }]}>
+    <View style={styles.container}>
+      <NavBar />
+      <View style={{ flex: 1, padding: 5 }}>
       <Link href="/" style={[styles.back, { fontSize: 18 * scale }]}>← VOLVER</Link>
       <Text style={[styles.title, { fontSize: 36 * scale }]}>FASE ELIMINATORIA</Text>
 
@@ -89,6 +92,7 @@ export default function Knockout() {
           })}
         </ScrollView>
       )}
+    </View>
     </View>
   );
 }

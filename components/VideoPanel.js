@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, TouchableOpacity, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TouchableOpacity, ScrollView, Platform, useWindowDimensions } from 'react-native';
 import { useEvent } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { CHANNELS } from '../constants/channels';
@@ -55,7 +55,7 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
       style={[styles.panel, focused && styles.panelFocused, { borderRadius: 8 * scale }]}
     >
       {/* Channel strip */}
-      <View style={[styles.channelStrip, { height: 34 * scale, paddingHorizontal: 8 * scale, gap: 4 * scale }]}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.channelStrip, { height: 34 * scale }]} contentContainerStyle={{ alignItems: 'center', paddingHorizontal: 8 * scale, gap: 4 * scale }}>
         {CHANNELS.map((ch) => {
           const active = ch.id === channelId;
           return (
@@ -73,7 +73,7 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
             </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
 
       {/* Video / Placeholder */}
       {streamUrl ? (
@@ -137,10 +137,6 @@ const styles = StyleSheet.create({
   channelStrip: {
     height: 34,
     backgroundColor: 'rgba(0,0,0,0.9)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    gap: 4,
   },
   chBtn: {
     paddingHorizontal: 10,

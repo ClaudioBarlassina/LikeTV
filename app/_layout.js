@@ -75,11 +75,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    // Overscan padding for TV (Android TV often clips 5-10% off edges)
-    paddingTop: 12,
-    paddingBottom: 12,
-    paddingLeft: 10,
-    paddingRight: 10,
   },
   loading: {
     flex: 1,

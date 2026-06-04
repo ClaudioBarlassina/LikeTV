@@ -1,16 +1,25 @@
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { useEffect, useState, useMemo } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Pressable } from 'react-native';
 import { fetchStandings } from '../services/api';
 import { COLORS, FONTS } from '../constants/theme';
 
 export default function GroupTable() {
   const [groups, setGroups] = useState([]);
+  const [selected, setSelected] = useState(0);
 
   useEffect(() => {
-    fetchStandings().then(setGroups);
+    fetchStandings().then((data) => {
+      setGroups(data);
+      setSelected(0);
+    });
   }, []);
 
-  const group = groups[0];
+  const group = groups[selected];
+
+  const sorted = useMemo(() => {
+    if (!group) return [];
+    return [...group.teams].sort((a, b) => b.points - a.points || (b.gf - b.ga) - (a.gf - a.ga));
+  }, [group]);
 
   if (!group) {
     return (
@@ -21,11 +30,28 @@ export default function GroupTable() {
     );
   }
 
-  const sorted = [...group.teams].sort((a, b) => b.points - a.points || (b.gf - b.ga) - (a.gf - a.ga));
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>GRUPO {group.group}</Text>
+
+      {groups.length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.groupRow}>
+            {groups.map((g, i) => (
+              <Pressable
+                key={g.group}
+                style={[styles.groupBtn, i === selected && styles.groupBtnActive]}
+                onPress={() => setSelected(i)}
+              >
+                <Text style={[styles.groupLabel, i === selected && styles.groupLabelActive]}>
+                  {g.group}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </ScrollView>
+      )}
+
       <View style={styles.table}>
         {sorted.map((team, i) => (
           <View key={team.name} style={[styles.row, i === 0 && styles.rowActive]}>
@@ -43,6 +69,11 @@ export default function GroupTable() {
 const styles = StyleSheet.create({
   container: { gap: 8 },
   title: { color: COLORS.gold, fontSize: 16, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1, borderBottomWidth: 1, borderBottomColor: '#333', paddingBottom: 6 },
+  groupRow: { flexDirection: 'row', gap: 4 },
+  groupBtn: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.06)' },
+  groupBtnActive: { backgroundColor: COLORS.goldDim },
+  groupLabel: { color: COLORS.dim, fontSize: 11, fontWeight: '600' },
+  groupLabelActive: { color: COLORS.gold },
   table: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: 3 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)' },
   rowActive: { backgroundColor: COLORS.goldDim, borderRadius: 6 },

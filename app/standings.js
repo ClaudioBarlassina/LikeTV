@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable, Image, Platform, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { fetchStandings, allGroups } from '../services/api';
+import NavBar from '../components/NavBar';
 import { COLORS } from '../constants/theme';
 
 const GROUP_ORDER = allGroups;
@@ -32,16 +33,21 @@ export default function Standings() {
 
   if (loading) {
     return (
-      <ScrollView style={styles.container}>
-        <Link href="/" style={styles.back}>← VOLVER</Link>
-        <Text style={styles.title}>TABLAS</Text>
-        <ActivityIndicator color={COLORS.gold} size="large" style={{ marginTop: 40 }} />
-      </ScrollView>
+      <View style={styles.container}>
+        <NavBar />
+        <ScrollView style={{ flex: 1 }}>
+          <Link href="/" style={styles.back}>← VOLVER</Link>
+          <Text style={styles.title}>TABLAS</Text>
+          <ActivityIndicator color={COLORS.gold} size="large" style={{ marginTop: 40 }} />
+        </ScrollView>
+      </View>
     );
   }
 
   return (
-    <ScrollView style={[styles.container, { padding: isCompact ? 16 : 40 * scale }]}>
+    <View style={styles.container}>
+      <NavBar />
+      <ScrollView style={{ flex: 1, padding: 5 }}>
       <Link href="/" style={[styles.back, { fontSize: 18 * scale }]}>← VOLVER</Link>
       <Text style={[styles.title, { fontSize: 36 * scale }]}>TABLAS</Text>
 
@@ -132,6 +138,7 @@ export default function Standings() {
         })}
       </View>
     </ScrollView>
+    </View>
   );
 }
 

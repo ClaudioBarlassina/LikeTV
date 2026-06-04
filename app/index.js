@@ -107,7 +107,7 @@ export default function LiveMatch() {
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const compact = windowWidth < COMPACT_BREAK;
   const scale = Math.min(1, Math.max(0.65, windowWidth / 1920));
-  const padding = compact ? 6 : 20 * scale;
+  const padding = 5;
   const gap = compact ? 6 : 12 * scale;
 
   const activeMatch = focused === 'A' ? matchA : focused === 'B' ? matchB : matchC;

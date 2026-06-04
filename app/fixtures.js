@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable, TextInput, Image, Platform, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { fetchLiveMatches, allGroups } from '../services/api';
+import NavBar from '../components/NavBar';
 import TeamFlag from '../components/TeamFlag';
 import { COLORS } from '../constants/theme';
 
@@ -69,7 +70,9 @@ export default function Fixtures() {
   const grouped = groupByDay(filtered);
 
   return (
-    <ScrollView style={[styles.container, { padding: isCompact ? 16 : 40 * scale }]}>
+    <View style={styles.container}>
+      <NavBar />
+      <ScrollView style={{ flex: 1, padding: 5 }}>
       <Link href="/" style={[styles.back, { fontSize: 18 * scale }]}>← VOLVER</Link>
       <Text style={[styles.title, { fontSize: 36 * scale }]}>CALENDARIO</Text>
 
@@ -218,6 +221,7 @@ export default function Fixtures() {
         </View>
       )}
     </ScrollView>
+    </View>
   );
 }
 
