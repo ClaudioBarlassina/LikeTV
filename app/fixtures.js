@@ -34,6 +34,7 @@ export default function Fixtures() {
   const [groupFilter, setGroupFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [teamFilter, setTeamFilter] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
 
   useEffect(() => {
     fetchLiveMatches().then((data) => {
@@ -77,7 +78,7 @@ export default function Fixtures() {
         {STATUSES.map((s, i) => (
           <Pressable
             key={s.key}
-            style={[styles.filterBtn, statusFilter === s.key && styles.filterBtnActive]}
+            style={({ focused }) => [styles.filterBtn, statusFilter === s.key && styles.filterBtnActive, focused && styles.filterBtnFocused]}
             onPress={() => setStatusFilter(s.key)}
             {...(isTV && i === 0 ? { hasTVPreferredFocus: true } : {})}
           >
@@ -92,7 +93,7 @@ export default function Fixtures() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.groupScroll} nestedScrollEnabled>
         <View style={styles.filterRow}>
           <Pressable
-            style={[styles.groupBtn, groupFilter === 'all' && styles.groupBtnActive]}
+            style={({ focused }) => [styles.groupBtn, groupFilter === 'all' && styles.groupBtnActive, focused && styles.groupBtnFocused]}
             onPress={() => setGroupFilter('all')}
           >
             <Text style={[styles.groupLabel, groupFilter === 'all' && styles.groupLabelActive]}>
@@ -102,7 +103,7 @@ export default function Fixtures() {
           {allGroups.map((g) => (
             <Pressable
               key={g}
-              style={[styles.groupBtn, groupFilter === g && styles.groupBtnActive]}
+              style={({ focused }) => [styles.groupBtn, groupFilter === g && styles.groupBtnActive, focused && styles.groupBtnFocused]}
               onPress={() => setGroupFilter(g)}
             >
               <Text style={[styles.groupLabel, groupFilter === g && styles.groupLabelActive]}>
@@ -115,11 +116,13 @@ export default function Fixtures() {
 
       {/* Team search */}
       <TextInput
-        style={styles.searchInput}
+        style={[styles.searchInput, searchFocused && styles.searchInputFocused]}
         placeholder="Buscar equipo..."
         placeholderTextColor={COLORS.dim}
         value={teamFilter}
         onChangeText={setTeamFilter}
+        onFocus={() => setSearchFocused(true)}
+        onBlur={() => setSearchFocused(false)}
       />
 
       {loading ? (
@@ -225,11 +228,13 @@ const styles = StyleSheet.create({
   filterRow: { flexDirection: 'row', gap: 6, marginBottom: 10, flexWrap: 'wrap' },
   filterBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: COLORS.panel, borderWidth: 1, borderColor: '#333' },
   filterBtnActive: { backgroundColor: COLORS.goldDim, borderColor: COLORS.gold },
+  filterBtnFocused: { borderColor: COLORS.gold, borderWidth: 2 },
   filterLabel: { color: COLORS.dim, fontSize: 13, fontWeight: '600', letterSpacing: 1 },
   filterLabelActive: { color: COLORS.gold },
   groupScroll: { marginBottom: 10 },
   groupBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, backgroundColor: COLORS.panel, marginRight: 6 },
   groupBtnActive: { backgroundColor: COLORS.goldDim },
+  groupBtnFocused: { borderColor: COLORS.gold, borderWidth: 1 },
   groupLabel: { color: COLORS.dim, fontSize: 12, fontWeight: '600' },
   groupLabelActive: { color: COLORS.gold },
   searchInput: {
@@ -242,6 +247,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333',
     marginBottom: 12,
+  },
+  searchInputFocused: {
+    borderColor: COLORS.gold,
+    borderWidth: 2,
   },
   empty: { color: COLORS.dim, fontSize: 16, textAlign: 'center', marginTop: 60 },
   dayBlock: { marginBottom: 30 },

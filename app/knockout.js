@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Platform, Pressable, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { fetchLiveMatches } from '../services/api';
 import { COLORS } from '../constants/theme';
@@ -54,7 +54,7 @@ export default function Knockout() {
                 <Text style={styles.roundTitle}>{round.label}</Text>
                 <View style={styles.grid}>
                   {roundMatches.map((m, i) => (
-                    <View key={m.id} style={[styles.matchCard, { width: 260 * scale, padding: 16 * scale }]} {...(isTV && i === 0 ? { focusable: true, hasTVPreferredFocus: true } : {})}>
+                    <Pressable key={m.id} style={({ focused }) => [styles.matchCard, focused && styles.matchCardFocused, { width: 260 * scale, padding: 16 * scale }]} {...(isTV && i === 0 ? { hasTVPreferredFocus: true } : {})}>
                       <View style={styles.teamRow}>
                         <Text style={[styles.teamName, !m.home_team_id || m.home_team_id === '0' ? styles.tbd : null, { fontSize: 15 * scale }]}>
                           {m.home_team_id && m.home_team_id !== '0' ? m.home_team : 'A definir'}
@@ -81,7 +81,7 @@ export default function Knockout() {
                             })
                           : '—'}
                       </Text>
-                    </View>
+                    </Pressable>
                   ))}
                 </View>
               </View>
@@ -106,6 +106,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#222',
+  },
+  matchCardFocused: {
+    borderColor: COLORS.gold,
+    borderWidth: 2,
   },
   teamRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
   teamName: { color: COLORS.white, fontWeight: '600', flex: 1 },

@@ -124,20 +124,20 @@ export default function LiveMatch() {
       {!giant && (
         <View style={[styles.layoutBar, { paddingVertical: compact ? 2 : 6 * scale, paddingHorizontal: compact ? 6 : 4 }]}>
           <Pressable
-            style={[styles.layoutBtn, layout === 'full' && styles.layoutBtnActive, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
+            style={({ focused }) => [styles.layoutBtn, layout === 'full' && styles.layoutBtnActive, focused && styles.focusRing, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
             onPress={() => { setLayout('full'); setGiant(false); }}
             {...(Platform.isTV ? { hasTVPreferredFocus: true } : {})}
           >
             <Text style={[styles.layoutLabel, layout === 'full' && styles.layoutLabelActive, { fontSize: compact ? 11 : 11 * scale }]}>FULL</Text>
           </Pressable>
           <Pressable
-            style={[styles.layoutBtn, layout === 'split' && styles.layoutBtnActive, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
+            style={({ focused }) => [styles.layoutBtn, layout === 'split' && styles.layoutBtnActive, focused && styles.focusRing, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
             onPress={() => { setLayout('split'); setGiant(false); }}
           >
             <Text style={[styles.layoutLabel, layout === 'split' && styles.layoutLabelActive, { fontSize: compact ? 11 : 11 * scale }]}>SPLIT</Text>
           </Pressable>
           <Pressable
-            style={[styles.layoutBtn, layout === 'triple' && styles.layoutBtnActive, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
+            style={({ focused }) => [styles.layoutBtn, layout === 'triple' && styles.layoutBtnActive, focused && styles.focusRing, { paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]}
             onPress={() => { setLayout('triple'); setGiant(false); }}
           >
             <Text style={[styles.layoutLabel, layout === 'triple' && styles.layoutLabelActive, { fontSize: compact ? 11 : 11 * scale }]}>1+2</Text>
@@ -159,7 +159,7 @@ export default function LiveMatch() {
                   match={matchA} channelId={channelA} onChannelChange={setChannelA}
                   onFocus={() => setFocused('A')} focused muted={false}
                 />
-                <Pressable style={[styles.giantBtn, { top: compact ? 4 : 8, right: compact ? 4 : 8, paddingHorizontal: compact ? 6 : 10 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]} onPress={() => setGiant(true)}>
+                <Pressable style={({ focused }) => [styles.giantBtn, focused && styles.focusRing, { top: compact ? 4 : 8, right: compact ? 4 : 8, paddingHorizontal: compact ? 6 : 10 * scale, paddingVertical: compact ? 4 : 6 * scale, borderRadius: compact ? 4 : 6 * scale }]} onPress={() => setGiant(true)}>
                   <Text style={[styles.giantBtnText, { fontSize: compact ? 12 : 13 * scale }]}>⛶</Text>
                 </Pressable>
               </View>
@@ -244,7 +244,7 @@ export default function LiveMatch() {
             match={matchA} channelId={channelA} onChannelChange={setChannelA}
             onFocus={() => setFocused('A')} focused muted={false}
           />
-          <Pressable style={[styles.giantBtn, { top: compact ? 10 : 20, right: compact ? 10 : 20, paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 5 : 8 * scale, borderRadius: compact ? 4 : 6 * scale }]} onPress={() => setGiant(false)} {...(Platform.isTV ? { hasTVPreferredFocus: true } : {})}>
+          <Pressable style={({ focused }) => [styles.giantBtn, focused && styles.focusRing, { top: compact ? 10 : 20, right: compact ? 10 : 20, paddingHorizontal: compact ? 8 : 12 * scale, paddingVertical: compact ? 5 : 8 * scale, borderRadius: compact ? 4 : 6 * scale }]} onPress={() => setGiant(false)} {...(Platform.isTV ? { hasTVPreferredFocus: true } : {})}>
             <Text style={[styles.giantBtnText, { fontSize: compact ? 11 : 11 * scale }]}>SALIR</Text>
           </Pressable>
         </View>
@@ -272,6 +272,7 @@ const styles = StyleSheet.create({
     borderColor: '#333',
   },
   layoutBtnActive: { backgroundColor: COLORS.goldDim, borderColor: COLORS.gold },
+  focusRing: { borderColor: COLORS.gold, borderWidth: 2 },
   layoutLabel: { color: COLORS.dim, fontWeight: '600', letterSpacing: 1 },
   layoutLabelActive: { color: COLORS.gold },
 

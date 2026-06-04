@@ -61,7 +61,7 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
           return (
             <Pressable
               key={ch.id}
-              style={[styles.chBtn, active && styles.chBtnActive, { paddingHorizontal: 10 * scale, paddingVertical: 4 * scale, borderRadius: 4 * scale, gap: 3 * scale }]}
+              style={({ focused }) => [styles.chBtn, active && styles.chBtnActive, focused && styles.chBtnFocused, { paddingHorizontal: 10 * scale, paddingVertical: 4 * scale, borderRadius: 4 * scale, gap: 3 * scale }]}
               onPress={() => onChannelChange?.(ch.id)}
             >
               <Text style={[styles.chLabel, active && styles.chLabelActive, { fontSize: 11 * scale }]}>
@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   chBtnActive: { backgroundColor: COLORS.goldDim },
+  chBtnFocused: { borderColor: COLORS.gold, borderWidth: 1 },
   chLabel: { color: COLORS.dim, fontSize: 11, fontWeight: '600', letterSpacing: 1 },
   chLabelActive: { color: COLORS.gold },
   liveDot: { color: COLORS.live, fontSize: 7 },

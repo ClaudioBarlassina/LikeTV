@@ -48,7 +48,7 @@ export default function Standings() {
       {/* Group navigation */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.groupNav} nestedScrollEnabled>
         <Pressable
-          style={[styles.navBtn, selectedGroup === 'all' && styles.navBtnActive]}
+          style={({ focused }) => [styles.navBtn, selectedGroup === 'all' && styles.navBtnActive, focused && styles.navBtnFocused]}
           onPress={() => setSelectedGroup('all')}
           {...(isTV ? { hasTVPreferredFocus: true } : {})}
         >
@@ -59,7 +59,7 @@ export default function Standings() {
         {sorted.map((g) => (
           <Pressable
             key={g.group}
-            style={[styles.navBtn, selectedGroup === g.group && styles.navBtnActive]}
+            style={({ focused }) => [styles.navBtn, selectedGroup === g.group && styles.navBtnActive, focused && styles.navBtnFocused]}
             onPress={() => setSelectedGroup(g.group)}
           >
             <Text style={[styles.navLabel, selectedGroup === g.group && styles.navLabelActive]}>
@@ -142,6 +142,7 @@ const styles = StyleSheet.create({
   groupNav: { marginBottom: 10 },
   navBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6, backgroundColor: COLORS.panel, marginRight: 6, borderWidth: 1, borderColor: '#222' },
   navBtnActive: { backgroundColor: COLORS.goldDim, borderColor: COLORS.gold },
+  navBtnFocused: { borderColor: COLORS.gold, borderWidth: 2 },
   navLabel: { color: COLORS.dim, fontSize: 13, fontWeight: '600' },
   navLabelActive: { color: COLORS.gold },
   groupBlock: { marginBottom: 20, backgroundColor: COLORS.panel, padding: 20, borderRadius: 12 },

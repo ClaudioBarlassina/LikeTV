@@ -13,7 +13,7 @@ export default function MatchSelector({ matches, selectedId, onSelect }) {
           return (
             <Pressable
               key={m.id}
-              style={[styles.card, isSelected && styles.cardSelected, isLive && styles.cardLive]}
+              style={({ focused }) => [styles.card, isSelected && styles.cardSelected, isLive && styles.cardLive, focused && styles.cardFocused]}
               onPress={() => onSelect(m)}
             >
               <Text style={[styles.teams, isSelected && styles.textSelected]}>
@@ -56,6 +56,7 @@ const styles = StyleSheet.create({
   },
   cardSelected: { borderColor: COLORS.gold, backgroundColor: COLORS.goldDim },
   cardLive: { borderColor: COLORS.live },
+  cardFocused: { borderColor: COLORS.gold, borderWidth: 2 },
   teams: { color: COLORS.white, fontSize: 12, fontWeight: '600' },
   score: { color: COLORS.gold, fontSize: 16, fontWeight: '800', marginVertical: 4 },
   textSelected: { color: COLORS.gold },

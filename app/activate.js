@@ -11,6 +11,7 @@ export default function Activate() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [inputFocused, setInputFocused] = useState(false);
   const router = useRouter();
 
   const handleActivate = async () => {
@@ -33,17 +34,19 @@ export default function Activate() {
       <Text style={[styles.subtitle, { fontSize: 18 * scale, marginBottom: 40 * scale }]}>Ingresá tu código de activación</Text>
 
       <TextInput
-        style={[styles.input, { padding: 18 * scale, fontSize: 28 * scale }]}
+        style={[styles.input, inputFocused && styles.inputFocused, { padding: 18 * scale, fontSize: 28 * scale }]}
         value={code}
         onChangeText={setCode}
         placeholder="WC26-XXXX-XXXX"
         placeholderTextColor="#555"
         autoCapitalize="characters"
         autoFocus={!isTV}
+        onFocus={() => setInputFocused(true)}
+        onBlur={() => setInputFocused(false)}
       />
 
       <Pressable
-        style={[styles.btn, !code.trim() && styles.btnDisabled, { paddingVertical: 16 * scale, paddingHorizontal: 60 * scale, borderRadius: 10 * scale, marginBottom: 30 * scale }]}
+        style={({ focused }) => [styles.btn, !code.trim() && styles.btnDisabled, focused && styles.btnFocused, { paddingVertical: 16 * scale, paddingHorizontal: 60 * scale, borderRadius: 10 * scale, marginBottom: 30 * scale }]}
         onPress={handleActivate}
         disabled={loading || !code.trim()}
         {...(isTV ? { hasTVPreferredFocus: true } : {})}
@@ -68,7 +71,7 @@ export default function Activate() {
             </Text>
           )}
           {result.success && (
-            <Pressable style={[styles.goBtn, { marginTop: 16 * scale, paddingVertical: 10 * scale, paddingHorizontal: 30 * scale, borderRadius: 8 * scale }]} onPress={() => router.replace('/')}>
+            <Pressable style={({ focused }) => [styles.goBtn, focused && styles.goBtnFocused, { marginTop: 16 * scale, paddingVertical: 10 * scale, paddingHorizontal: 30 * scale, borderRadius: 8 * scale }]} onPress={() => router.replace('/')}>
               <Text style={[styles.goBtnText, { fontSize: 14 * scale }]}>IR AL INICIO</Text>
             </Pressable>
           )}
@@ -111,11 +114,19 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     marginBottom: 20,
   },
+  inputFocused: {
+    borderColor: COLORS.gold,
+    borderWidth: 2,
+  },
   btn: {
     backgroundColor: COLORS.gold,
   },
   btnDisabled: {
     opacity: 0.4,
+  },
+  btnFocused: {
+    borderWidth: 2,
+    borderColor: COLORS.white,
   },
   btnText: {
     color: '#000',
@@ -153,6 +164,10 @@ const styles = StyleSheet.create({
   },
   goBtn: {
     backgroundColor: COLORS.gold,
+  },
+  goBtnFocused: {
+    borderWidth: 2,
+    borderColor: COLORS.white,
   },
   goBtnText: {
     color: '#000',
