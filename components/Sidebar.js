@@ -1,5 +1,5 @@
 import { View, StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
-import StatsPanel from './StatsPanel';
+import FinishedMatches from './FinishedMatches';
 import GroupTable from './GroupTable';
 import UpcomingMatches from './UpcomingMatches';
 import { COLORS } from '../constants/theme';
@@ -13,7 +13,7 @@ export default function Sidebar({ match, matches }) {
   return (
     <View style={[styles.sidebar, { width: sideW }]}>
       <View style={{ flex: 1, padding: sidePad, gap: 12, justifyContent: 'flex-start' }}>
-        {match && <StatsPanel match={match} />}
+        <FinishedMatches matches={matches} />
         <GroupTable />
         <UpcomingMatches matches={matches} />
       </View>

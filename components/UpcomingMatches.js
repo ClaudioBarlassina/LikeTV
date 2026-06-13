@@ -3,14 +3,18 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { fetchLiveMatches } from '../services/api';
 import { COLORS, FONTS } from '../constants/theme';
 
-export default function UpcomingMatches() {
+export default function UpcomingMatches({ matches: propMatches }) {
   const [matches, setMatches] = useState([]);
 
   useEffect(() => {
-    fetchLiveMatches().then(setMatches);
-  }, []);
+    if (!propMatches) {
+      fetchLiveMatches().then(setMatches);
+    }
+  }, [propMatches]);
 
-  const upcoming = matches.filter((m) => m.status === 'scheduled' || m.status === 'upcoming').slice(0, 3);
+  const data = propMatches || matches;
+
+  const upcoming = data.filter((m) => m.status === 'scheduled' || m.status === 'upcoming').slice(0, 3);
 
   if (upcoming.length === 0) {
     return (

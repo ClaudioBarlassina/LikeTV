@@ -170,6 +170,9 @@ export const MOCK_LIVE_MATCHES = [
   { id: '1', home_team: 'Argentina', away_team: 'Francia', home_score: 3, away_score: 3, status: 'live', group: 'J' },
   { id: '2', home_team: 'Brasil', away_team: 'Alemania', home_score: 2, away_score: 0, status: 'finished', group: 'C' },
   { id: '3', home_team: 'España', away_team: 'Japón', home_score: 1, away_score: 1, status: 'live', group: 'H' },
+  { id: '4', home_team: 'Portugal', away_team: 'Ghana', home_score: 3, away_score: 2, status: 'finished', group: 'H' },
+  { id: '5', home_team: 'Inglaterra', away_team: 'Senegal', home_score: 4, away_score: 0, status: 'finished', group: 'B' },
+  { id: '6', home_team: 'Países Bajos', away_team: 'EEUU', home_score: 2, away_score: 1, status: 'finished', group: 'A' },
 ];
 
 export const MOCK_STANDINGS = [

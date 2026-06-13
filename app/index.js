@@ -6,7 +6,7 @@ import Sidebar from '../components/Sidebar';
 import BottomBar from '../components/BottomBar';
 import NavBar from '../components/NavBar';
 import Countdown from '../components/Countdown';
-import StatsPanel from '../components/StatsPanel';
+import FinishedMatches from '../components/FinishedMatches';
 import GroupTable from '../components/GroupTable';
 import UpcomingMatches from '../components/UpcomingMatches';
 import { loadChannels } from '../constants/channels';
@@ -135,7 +135,7 @@ export default function LiveMatch() {
           />
         </View>
         <ScrollView style={{ flex: 1, backgroundColor: COLORS.bg }} contentContainerStyle={{ paddingBottom: 20 }}>
-          {matchA && <StatsPanel match={matchA} />}
+          <FinishedMatches matches={matches} />
           <GroupTable />
           <UpcomingMatches matches={matches} />
           {hasContent && (
