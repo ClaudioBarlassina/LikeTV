@@ -5,6 +5,31 @@ const TEAM_CACHE = {};
 const STADIUM_CACHE = {};
 let CACHES_LOADED = false;
 
+// Caché local para sobrevivir caídas de la API upstream
+const LOCAL_CACHE = {};
+const CACHE_TTL = 300000; // 5 minutos
+
+function storeCache(key, data) {
+  LOCAL_CACHE[key] = { data, ts: Date.now() };
+  try { if (typeof localStorage !== 'undefined') localStorage.setItem('api_' + key, JSON.stringify({ data, ts: Date.now() })); } catch {}
+}
+
+function loadCache(key) {
+  const mem = LOCAL_CACHE[key];
+  if (mem && Date.now() - mem.ts < CACHE_TTL) return mem.data;
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('api_' + key) : null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Date.now() - parsed.ts < CACHE_TTL) {
+        LOCAL_CACHE[key] = parsed;
+        return parsed.data;
+      }
+    }
+  } catch {}
+  return null;
+}
+
 async function loadCaches() {
   if (CACHES_LOADED) return;
   try {
@@ -46,43 +71,49 @@ function getStadiumCity(id) {
   return s ? (s.city_en || s.city || null) : null;
 }
 
+function transformMatches(raw) {
+  return (raw.games || []).map((m) => ({
+    id: m.id,
+    home_team: m.home_team_name_en || getTeamName(m.home_team_id),
+    away_team: m.away_team_name_en || getTeamName(m.away_team_id),
+    home_team_id: m.home_team_id,
+    away_team_id: m.away_team_id,
+    home_flag: TEAM_CACHE[m.home_team_id]?.flag || null,
+    away_flag: TEAM_CACHE[m.away_team_id]?.flag || null,
+    home_iso2: TEAM_CACHE[m.home_team_id]?.iso2 || null,
+    away_iso2: TEAM_CACHE[m.away_team_id]?.iso2 || null,
+    home_score: parseInt(m.home_score) || 0,
+    away_score: parseInt(m.away_score) || 0,
+    status:
+      m.finished === 'TRUE'
+        ? 'finished'
+        : m.time_elapsed && m.time_elapsed !== 'notstarted'
+          ? 'live'
+          : 'upcoming',
+    group: m.group,
+    date: parseDate(m.local_date),
+    matchday: parseInt(m.matchday) || 0,
+    stadium: getStadiumName(m.stadium_id),
+    stadium_city: getStadiumCity(m.stadium_id),
+    time_elapsed: m.time_elapsed,
+    type: m.type,
+  }));
+}
+
 export async function fetchLiveMatches() {
   try {
     await loadCaches();
     const res = await fetch(`${API_BASE}/get/games`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    const matches = data.games || [];
-
-    return matches.map((m) => ({
-      id: m.id,
-      home_team: m.home_team_name_en || getTeamName(m.home_team_id),
-      away_team: m.away_team_name_en || getTeamName(m.away_team_id),
-      home_team_id: m.home_team_id,
-      away_team_id: m.away_team_id,
-      home_flag: TEAM_CACHE[m.home_team_id]?.flag || null,
-      away_flag: TEAM_CACHE[m.away_team_id]?.flag || null,
-      home_iso2: TEAM_CACHE[m.home_team_id]?.iso2 || null,
-      away_iso2: TEAM_CACHE[m.away_team_id]?.iso2 || null,
-      home_score: parseInt(m.home_score) || 0,
-      away_score: parseInt(m.away_score) || 0,
-      status:
-        m.finished === 'TRUE'
-          ? 'finished'
-          : m.time_elapsed && m.time_elapsed !== 'notstarted'
-            ? 'live'
-            : 'upcoming',
-      group: m.group,
-      date: parseDate(m.local_date),
-      matchday: parseInt(m.matchday) || 0,
-      stadium: getStadiumName(m.stadium_id),
-      stadium_city: getStadiumCity(m.stadium_id),
-      time_elapsed: m.time_elapsed,
-      type: m.type,
-    }));
+    const matches = transformMatches(data);
+    storeCache('games', matches);
+    return matches;
   } catch (e) {
-    console.warn('Games API error, using mock data:', e.message);
-    return MOCK_LIVE_MATCHES;
+    console.warn('Games API error:', e.message);
+    const cached = loadCache('games');
+    if (cached) { console.log('Using cached games data'); return cached; }
+    return [];
   }
 }
 
@@ -92,9 +123,7 @@ export async function fetchStandings() {
     const res = await fetch(`${API_BASE}/get/groups`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    const groups = data.groups || [];
-
-    return groups.map((g) => ({
+    const groups = (data.groups || []).map((g) => ({
       group: g.name,
       teams: (g.teams || [])
         .map((t) => {
@@ -116,9 +145,13 @@ export async function fetchStandings() {
         .sort((a, b) => b.points - a.points || (b.gf - b.ga) - (a.gf - a.ga))
         .map((t, i) => ({ ...t, rank: i + 1 })),
     }));
+    storeCache('standings', groups);
+    return groups;
   } catch (e) {
-    console.warn('Standings API error, using mock data:', e.message);
-    return MOCK_STANDINGS;
+    console.warn('Standings API error:', e.message);
+    const cached = loadCache('standings');
+    if (cached) { console.log('Using cached standings data'); return cached; }
+    return [];
   }
 }
 
@@ -129,7 +162,7 @@ export async function fetchTeams() {
     const data = await res.json();
     return data.teams || [];
   } catch {
-    return MOCK_TEAMS;
+    return [];
   }
 }
 

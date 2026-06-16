@@ -11,6 +11,9 @@ const PORT = process.env.PORT || 4000;
 const M3U8_CACHE = {};
 const M3U8_CACHE_TTL = 3000;
 
+const API_CACHE = {};
+const API_CACHE_TTL = 10000; // 10 segundos
+
 setInterval(() => {
   const now = Date.now();
   for (const key in M3U8_CACHE) {
@@ -43,6 +46,71 @@ async function isAdmin(req) {
   const auth = req.headers['authorization'];
   if (!auth || !auth.startsWith('Bearer ')) return false;
   return storage.checkToken(auth.slice(7));
+}
+
+function fetchBody(targetUrl) {
+  return new Promise((resolve, reject) => {
+    const transport = targetUrl.protocol === 'https:' ? https : http;
+    const reqOpts = {
+      hostname: targetUrl.hostname,
+      port: targetUrl.port || (targetUrl.protocol === 'https:' ? 443 : 80),
+      path: targetUrl.pathname + targetUrl.search,
+      method: 'GET',
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+    };
+    const req = transport.request(reqOpts, (proxyRes) => {
+      const chunks = [];
+      proxyRes.on('data', c => chunks.push(c));
+      proxyRes.on('end', () => {
+        const body = Buffer.concat(chunks);
+        if (proxyRes.statusCode === 200) {
+          resolve(body);
+        } else {
+          reject(new Error(`HTTP ${proxyRes.statusCode}`));
+        }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(15000, () => { req.destroy(new Error('Timeout')); });
+    req.end();
+  });
+}
+
+function proxyWithCache(targetUrl, cacheKey, res) {
+  const now = Date.now();
+  const cached = API_CACHE[cacheKey];
+
+  // Cache fresco (< 10s)
+  if (cached && now - cached.ts < API_CACHE_TTL) {
+    jsonResponse(res, 200, cached.data);
+    return;
+  }
+
+  // Cache staled → devolverlo ya y refrescar en background
+  if (cached) {
+    jsonResponse(res, 200, cached.data);
+    fetchBody(targetUrl).then(body => {
+      try {
+        API_CACHE[cacheKey] = { data: JSON.parse(body.toString()), ts: Date.now() };
+        console.log(`  ✓ Cache refreshed: ${cacheKey}`);
+      } catch (e) { console.warn(`  ✗ Cache parse error: ${cacheKey}`, e.message); }
+    }).catch(e => console.warn(`  ✗ Cache background refresh failed: ${cacheKey}`, e.message));
+    return;
+  }
+
+  // Sin caché → esperar el fetch
+  fetchBody(targetUrl).then(body => {
+    try {
+      const data = JSON.parse(body.toString());
+      API_CACHE[cacheKey] = { data, ts: Date.now() };
+      jsonResponse(res, 200, data);
+    } catch (e) {
+      jsonResponse(res, 502, { error: 'Invalid response' });
+    }
+  }).catch(e => {
+    console.error(`  ✗ Cache fetch error: ${cacheKey}`, e.message);
+    jsonResponse(res, 502, { error: e.message, games: [], teams: [], groups: [], stadiums: [] });
+  });
 }
 
 function proxyRequest(targetUrl, res, contentType) {
@@ -159,11 +227,12 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // PROXY: /get/* → worldcup26.ir
+  // PROXY: /get/* → worldcup26.ir (con caché)
   if (pathname.startsWith('/get/')) {
+    const cacheKey = pathname + parsedUrl.search;
     const targetUrl = new URL(PROXY_TARGET + pathname + parsedUrl.search);
     console.log(`  → ${targetUrl.href}`);
-    proxyRequest(targetUrl, res);
+    proxyWithCache(targetUrl, cacheKey, res);
     return;
   }
 
