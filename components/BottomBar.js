@@ -1,15 +1,39 @@
-import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
 import MatchCard from './MatchCard';
 import { COLORS } from '../constants/theme';
 
 export default function BottomBar({ matches = [], compact, margin }) {
   const { width: windowWidth } = useWindowDimensions();
   const scale = Math.min(1, Math.max(0.65, windowWidth / 1920));
-  const barW = compact ? windowWidth - margin * 2 : undefined;
   const barH = compact ? 110 : 200 * scale;
   const barPad = compact ? 8 : 20 * scale;
+  const scrollRef = useRef(null);
+  const [scrollIdx, setScrollIdx] = useState(0);
 
   const active = matches.filter((m) => m.status === 'live' || m.status === 'finished');
+  const CARD_W = (310 * scale) + (compact ? 8 : 25);
+
+  useEffect(() => {
+    setScrollIdx(0);
+  }, [active.length]);
+
+  useEffect(() => {
+    if (active.length <= 1) return;
+    const timer = setInterval(() => {
+      setScrollIdx(prev => (prev + 1) % active.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [active.length]);
+
+  useEffect(() => {
+    if (scrollRef.current && active.length > 0) {
+      scrollRef.current.scrollTo({
+        x: scrollIdx * CARD_W,
+        animated: true,
+      });
+    }
+  }, [scrollIdx, CARD_W, active.length]);
 
   if (active.length === 0) {
     return (
@@ -49,22 +73,30 @@ export default function BottomBar({ matches = [], compact, margin }) {
   }
 
   return (
-    <View style={[styles.container, { height: barH, padding: barPad, gap: compact ? 8 : 25 }]}>
-      {active.slice(0, compact ? 2 : 3).map((m) => (
-        <MatchCard
-          key={m.id}
-          team1={m.home_team || 'TBD'}
-          team2={m.away_team || 'TBD'}
-          score1={m.home_score}
-          score2={m.away_score}
-          flag1={m.home_flag}
-          flag2={m.away_flag}
-          iso1={m.home_iso2}
-          iso2={m.away_iso2}
-          status={m.status === 'finished' ? 'FINALIZADO' : undefined}
-          isLive={m.status === 'live'}
-        />
-      ))}
+    <View style={[styles.container, { height: barH, padding: barPad }]}>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: compact ? 8 : 25, alignItems: 'center' }}
+        scrollEnabled
+      >
+        {active.map((m) => (
+          <MatchCard
+            key={m.id}
+            team1={m.home_team || 'TBD'}
+            team2={m.away_team || 'TBD'}
+            score1={m.home_score}
+            score2={m.away_score}
+            flag1={m.home_flag}
+            flag2={m.away_flag}
+            iso1={m.home_iso2}
+            iso2={m.away_iso2}
+            status={m.status === 'finished' ? 'FINALIZADO' : undefined}
+            isLive={m.status === 'live'}
+          />
+        ))}
+      </ScrollView>
     </View>
   );
 }

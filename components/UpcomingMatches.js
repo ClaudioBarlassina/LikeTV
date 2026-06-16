@@ -1,22 +1,40 @@
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { fetchLiveMatches } from '../services/api';
-import { COLORS, FONTS } from '../constants/theme';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { COLORS } from '../constants/theme';
 
 export default function UpcomingMatches({ matches: propMatches }) {
   const [matches, setMatches] = useState([]);
+  const [offset, setOffset] = useState(0);
+  const timerRef = useRef(null);
 
   useEffect(() => {
-    if (!propMatches) {
-      fetchLiveMatches().then(setMatches);
-    }
+    if (!propMatches) return;
+    setMatches(propMatches);
   }, [propMatches]);
 
-  const data = propMatches || matches;
+  const upcoming = matches.filter((m) => m.status === 'scheduled' || m.status === 'upcoming');
 
-  const upcoming = data.filter((m) => m.status === 'scheduled' || m.status === 'upcoming').slice(0, 3);
+  useEffect(() => {
+    if (upcoming.length <= 1) {
+      setOffset(0);
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setOffset(prev => (prev + 1) % upcoming.length);
+    }, 4000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [upcoming.length, propMatches]);
 
-  if (upcoming.length === 0) {
+  const displayed = useMemo(() => {
+    if (offset === 0 || upcoming.length === 0) return upcoming;
+    return [...upcoming.slice(offset), ...upcoming.slice(0, offset)];
+  }, [upcoming, offset]);
+
+  const show = displayed.slice(0, 3);
+
+  if (show.length === 0) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>PRÓXIMOS</Text>
@@ -28,7 +46,7 @@ export default function UpcomingMatches({ matches: propMatches }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>PRÓXIMOS</Text>
-      {upcoming.map((m) => (
+      {show.map((m) => (
         <View key={m.id} style={styles.row}>
           <Text style={styles.match}>
             {(m.home_team || 'TBD').toUpperCase()} vs {(m.away_team || 'TBD').toUpperCase()}

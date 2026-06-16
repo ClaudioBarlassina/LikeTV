@@ -1,18 +1,36 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Pressable } from 'react-native';
 import { fetchStandings } from '../services/api';
 import { COLORS, FONTS } from '../constants/theme';
 
-export default function GroupTable() {
+export default function GroupTable({ refreshKey = 0 }) {
   const [groups, setGroups] = useState([]);
   const [selected, setSelected] = useState(0);
+  const timerRef = useRef(null);
 
   useEffect(() => {
     fetchStandings().then((data) => {
       setGroups(data);
       setSelected(0);
     });
-  }, []);
+  }, [refreshKey]);
+
+  useEffect(() => {
+    if (groups.length <= 1) return;
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setSelected(prev => (prev + 1) % groups.length);
+    }, 10000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [groups.length, refreshKey]);
+
+  const handlePress = (i) => {
+    setSelected(i);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setSelected(prev => (prev + 1) % groups.length);
+    }, 10000);
+  };
 
   const group = groups[selected];
 
@@ -41,7 +59,7 @@ export default function GroupTable() {
               <Pressable
                 key={g.group}
                 style={[styles.groupBtn, i === selected && styles.groupBtnActive]}
-                onPress={() => setSelected(i)}
+                onPress={() => handlePress(i)}
               >
                 <Text style={[styles.groupLabel, i === selected && styles.groupLabelActive]}>
                   {g.group}

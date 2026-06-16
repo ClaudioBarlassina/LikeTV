@@ -29,6 +29,7 @@ export default function LiveMatch() {
   const [giant, setGiant] = useState(false);
   const [focusKey, setFocusKey] = useState(0);
   const [chVer, setChVer] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Refresh channels & trigger re-render when gaining focus (e.g. returning from admin same tab)
   useFocusEffect(
@@ -88,7 +89,10 @@ export default function LiveMatch() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(() => {
+      fetchData();
+      setRefreshKey(k => k + 1);
+    }, 30000);
     return () => clearInterval(interval);
   }, [fetchData]);
 
@@ -140,7 +144,7 @@ export default function LiveMatch() {
           <UpcomingMatches matches={matches} />
           {hasContent && (
             <View style={{ height: bottomH, marginTop: 8 }}>
-              <BottomBar compact margin={0} />
+              <BottomBar matches={matches} compact margin={0} />
             </View>
           )}
           {!hasContent && (
@@ -252,7 +256,7 @@ export default function LiveMatch() {
 
           </View>
 
-          {!compact && <Sidebar match={activeMatch} matches={matches} />}
+          {!compact && <Sidebar matchA={matchA} match={activeMatch} matches={matches} refreshKey={refreshKey} />}
         </View>
       )}
 
@@ -263,7 +267,7 @@ export default function LiveMatch() {
               <Countdown />
             </View>
           ) : (
-            <BottomBar compact={compact} margin={padding} />
+            <BottomBar matches={matches} compact={compact} margin={padding} />
           )}
         </View>
       )}
