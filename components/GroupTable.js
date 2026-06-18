@@ -11,7 +11,7 @@ export default function GroupTable({ refreshKey = 0 }) {
   useEffect(() => {
     fetchStandings().then((data) => {
       setGroups(data);
-      setSelected(0);
+      setSelected(prev => Math.min(prev, data.length - 1));
     });
   }, [refreshKey]);
 
@@ -22,7 +22,7 @@ export default function GroupTable({ refreshKey = 0 }) {
       setSelected(prev => (prev + 1) % groups.length);
     }, 10000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [groups.length, refreshKey]);
+  }, [groups.length]);
 
   const handlePress = (i) => {
     setSelected(i);
