@@ -5,6 +5,61 @@ const TEAM_CACHE = {};
 const STADIUM_CACHE = {};
 let CACHES_LOADED = false;
 
+const TEAM_NAMES_ES = {
+  "Algeria": "Argelia",
+  "Argentina": "Argentina",
+  "Australia": "Australia",
+  "Austria": "Austria",
+  "Belgium": "Bélgica",
+  "Bosnia and Herzegovina": "Bosnia y Herzegovina",
+  "Brazil": "Brasil",
+  "Canada": "Canadá",
+  "Cape Verde": "Cabo Verde",
+  "Colombia": "Colombia",
+  "Croatia": "Croacia",
+  "Curaçao": "Curazao",
+  "Czech Republic": "República Checa",
+  "Democratic Republic of the Congo": "República Democrática del Congo",
+  "Ecuador": "Ecuador",
+  "Egypt": "Egipto",
+  "England": "Inglaterra",
+  "France": "Francia",
+  "Germany": "Alemania",
+  "Ghana": "Ghana",
+  "Haiti": "Haití",
+  "Iran": "Irán",
+  "Iraq": "Irak",
+  "Ivory Coast": "Costa de Marfil",
+  "Japan": "Japón",
+  "Jordan": "Jordania",
+  "Mexico": "México",
+  "Morocco": "Marruecos",
+  "Netherlands": "Países Bajos",
+  "New Zealand": "Nueva Zelanda",
+  "Norway": "Noruega",
+  "Panama": "Panamá",
+  "Paraguay": "Paraguay",
+  "Portugal": "Portugal",
+  "Qatar": "Catar",
+  "Saudi Arabia": "Arabia Saudita",
+  "Scotland": "Escocia",
+  "Senegal": "Senegal",
+  "South Africa": "Sudáfrica",
+  "South Korea": "Corea del Sur",
+  "Spain": "España",
+  "Sweden": "Suecia",
+  "Switzerland": "Suiza",
+  "Tunisia": "Túnez",
+  "Turkey": "Turquía",
+  "United States": "Estados Unidos",
+  "Uruguay": "Uruguay",
+  "Uzbekistan": "Uzbekistán",
+};
+
+function toSpanish(nameEn) {
+  return TEAM_NAMES_ES[nameEn] || nameEn;
+}
+
 // Caché local para sobrevivir caídas de la API upstream
 const LOCAL_CACHE = {};
 const CACHE_TTL = 300000; // 5 minutos
@@ -58,7 +113,7 @@ async function loadCaches() {
 
 function getTeamName(id) {
   const t = TEAM_CACHE[id];
-  return t ? t.name_en : `Team ${id}`;
+  return t ? toSpanish(t.name_en) : `Equipo ${id}`;
 }
 
 function getStadiumName(id) {
@@ -74,8 +129,8 @@ function getStadiumCity(id) {
 function transformMatches(raw) {
   return (raw.games || []).map((m) => ({
     id: m.id,
-    home_team: m.home_team_name_en || getTeamName(m.home_team_id),
-    away_team: m.away_team_name_en || getTeamName(m.away_team_id),
+    home_team: toSpanish(m.home_team_name_en) || getTeamName(m.home_team_id),
+    away_team: toSpanish(m.away_team_name_en) || getTeamName(m.away_team_id),
     home_team_id: m.home_team_id,
     away_team_id: m.away_team_id,
     home_flag: TEAM_CACHE[m.home_team_id]?.flag || null,
@@ -130,7 +185,7 @@ export async function fetchStandings() {
           const team = TEAM_CACHE[t.team_id];
           return {
             rank: 0,
-            name: team ? team.name_en : getTeamName(t.team_id),
+            name: team ? toSpanish(team.name_en) : getTeamName(t.team_id),
             flag: team ? team.flag : null,
             iso2: team ? team.iso2 : null,
             points: parseInt(t.pts) || 0,
