@@ -32,7 +32,6 @@ function LivePulse() {
 }
 
 function MatchCard({ match }) {
-  const { width: w } = useWindowDimensions();
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
   const isUpcoming = match.status === 'upcoming';
@@ -42,56 +41,38 @@ function MatchCard({ match }) {
 
   return (
     <Animated.View style={[
-      styles.card,
+      s.card,
       isLive && { borderColor: COLORS.live, borderWidth: 2, opacity: pulse },
       isFinished && { borderColor: COLORS.gold, borderWidth: 1 },
       isUpcoming && { borderColor: '#222', borderWidth: 1 },
     ]}>
-      <View style={styles.cardMain}>
-        <View style={styles.teamCol}>
-          {!ht && <TeamFlag name={match.home_team} iso2={match.home_iso2} size={22} />}
-          <Text style={[styles.teamName, ht && styles.tbd]} numberOfLines={1}>
-            {ht ? 'A definir' : match.home_team}
-          </Text>
+      <View style={s.cardMain}>
+        <View style={s.teamRow}>
+          {!ht && <TeamFlag name={match.home_team} iso2={match.home_iso2} size={18} />}
+          <Text style={[s.teamName, ht && s.tbd]} numberOfLines={1}>{ht ? '?' : match.home_team}</Text>
         </View>
 
-        <View style={styles.scoreCol}>
+        <View style={s.scoreCol}>
           {isLive || isFinished ? (
-            <Text style={[styles.score, isLive && { color: COLORS.live }, isFinished && { color: COLORS.gold }]}>
+            <Text style={[s.score, isLive && { color: COLORS.live }, isFinished && { color: COLORS.gold }]}>
               {match.home_score} - {match.away_score}
             </Text>
           ) : (
-            <Text style={styles.vs}>vs</Text>
+            <Text style={s.vs}>vs</Text>
           )}
-          <View style={[styles.badge, isLive && styles.badgeLive, isFinished && styles.badgeFinished, isUpcoming && styles.badgeUpcoming]}>
-            <Text style={[styles.badgeText, isLive && { color: '#fff' }, isFinished && { color: COLORS.gold }, isUpcoming && { color: COLORS.dim }]}>
-              {isLive ? 'EN VIVO' : isFinished ? 'FINAL' : isUpcoming && match.date ? matchTime(match.date) : 'PRÓXIMO'}
-            </Text>
-          </View>
         </View>
 
-        <View style={styles.teamCol}>
-          <Text style={[styles.teamName, at && styles.tbd, { textAlign: 'right' }]} numberOfLines={1}>
-            {at ? 'A definir' : match.away_team}
-          </Text>
-          {!at && <TeamFlag name={match.away_team} iso2={match.away_iso2} size={22} />}
+        <View style={s.teamRow}>
+          <Text style={[s.teamName, at && s.tbd, { textAlign: 'right' }]} numberOfLines={1}>{at ? '?' : match.away_team}</Text>
+          {!at && <TeamFlag name={match.away_team} iso2={match.away_iso2} size={18} />}
         </View>
       </View>
 
-      {(match.stadium || (isUpcoming && match.date)) && (
-        <View style={styles.cardFooter}>
-          {isUpcoming && match.date ? (
-            <Text style={styles.footerText}>
-              {matchDate(match.date, { weekday: 'short', day: 'numeric', month: 'short' })} {matchTime(match.date)}
-            </Text>
-          ) : isLive && match.time_elapsed && match.time_elapsed !== 'notstarted' ? (
-            <Text style={styles.footerText}>{match.time_elapsed}'</Text>
-          ) : null}
-          {match.stadium ? (
-            <Text style={styles.footerText} numberOfLines={1}>{match.stadium}{match.stadium_city ? `, ${match.stadium_city}` : ''}</Text>
-          ) : null}
-        </View>
-      )}
+      <View style={[s.badgeRow, isLive && { backgroundColor: COLORS.live }, isFinished && { backgroundColor: 'rgba(212,175,55,0.15)' }, isUpcoming && { backgroundColor: '#1a1a1a' }]}>
+        <Text style={[s.badgeText, isLive && { color: '#fff' }, isFinished && { color: COLORS.gold }, isUpcoming && { color: COLORS.dim }]}>
+          {isLive ? 'EN VIVO' : isFinished ? 'FINAL' : isUpcoming && match.date ? `${matchDate(match.date, { day: 'numeric', month: 'short' })} ${matchTime(match.date)}` : 'PRÓXIMO'}
+        </Text>
+      </View>
     </Animated.View>
   );
 }
@@ -99,6 +80,7 @@ function MatchCard({ match }) {
 export default function Knockout() {
   const { width: w } = useWindowDimensions();
   const scale = Math.min(1, Math.max(0.65, w / 1920));
+  const isTwoCol = w >= 900;
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -117,23 +99,23 @@ export default function Knockout() {
   }, [matches]);
 
   return (
-    <View style={styles.container}>
+    <View style={s.container}>
       <NavBar />
       <View style={{ flex: 1, padding: 5 }}>
-        <Link href="/" style={[styles.back, { fontSize: 16 * scale }]}>← VOLVER</Link>
-        <Text style={[styles.title, { fontSize: 30 * scale }]}>FASE ELIMINATORIA</Text>
+        <Link href="/" style={[s.back, { fontSize: 15 * scale }]}>← VOLVER</Link>
+        <Text style={[s.title, { fontSize: 28 * scale }]}>FASE ELIMINATORIA</Text>
 
         {loading ? (
           <ActivityIndicator color={COLORS.gold} size="large" style={{ marginTop: 40 }} />
         ) : (
-          <ScrollView style={styles.list}>
+          <ScrollView style={s.list}>
             {ROUNDS.map((round) => {
               const ms = byRound[round.key] || [];
               if (ms.length === 0) return null;
               return (
-                <View key={round.key} style={styles.roundBlock}>
-                  <Text style={[styles.roundTitle, { fontSize: 18 * scale }]}>{round.label}</Text>
-                  <View style={styles.grid}>
+                <View key={round.key} style={s.roundBlock}>
+                  <Text style={[s.roundTitle, { fontSize: 17 * scale }]}>{round.label}</Text>
+                  <View style={[s.grid, isTwoCol ? s.gridTwo : s.gridOne]}>
                     {ms.map((m) => (
                       <MatchCard key={m.id} match={m} />
                     ))}
@@ -148,52 +130,45 @@ export default function Knockout() {
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  back: { color: COLORS.gold, fontWeight: 'bold', marginBottom: 16 },
-  title: { color: COLORS.gold, fontWeight: 'bold', letterSpacing: 3, marginBottom: 24 },
+  back: { color: COLORS.gold, fontWeight: 'bold', marginBottom: 14 },
+  title: { color: COLORS.gold, fontWeight: 'bold', letterSpacing: 3, marginBottom: 22 },
   list: { flex: 1 },
-  roundBlock: { marginBottom: 30 },
+  roundBlock: { marginBottom: 28 },
   roundTitle: { color: COLORS.white, fontWeight: 'bold', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: COLORS.gold, paddingBottom: 8, letterSpacing: 2 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  gridTwo: { justifyContent: 'center' },
+  gridOne: { justifyContent: 'center' },
   card: {
     backgroundColor: COLORS.panel,
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    minWidth: 320,
-    flex: 1,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    width: 320,
   },
   cardMain: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  teamCol: {
+  teamRow: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
-  teamName: { color: COLORS.white, fontWeight: '700', fontSize: 14, flexShrink: 1 },
+  teamName: { color: COLORS.white, fontWeight: '700', fontSize: 13, flexShrink: 1 },
   tbd: { color: COLORS.dim, fontStyle: 'italic' },
-  scoreCol: { alignItems: 'center', minWidth: 90 },
-  score: { fontWeight: '900', fontSize: 22, letterSpacing: 2 },
-  vs: { color: COLORS.dim, fontWeight: '700', fontSize: 16 },
-  badge: { marginTop: 4, paddingHorizontal: 12, paddingVertical: 3, borderRadius: 12 },
-  badgeLive: { backgroundColor: COLORS.live },
-  badgeFinished: { backgroundColor: 'rgba(212,175,55,0.15)' },
-  badgeUpcoming: { backgroundColor: '#1a1a1a' },
-  badgeText: { fontSize: 10, fontWeight: '800', letterSpacing: 1 },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 14,
-    marginTop: 8,
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: '#1a1a1a',
-    flexWrap: 'wrap',
+  scoreCol: { alignItems: 'center', minWidth: 60, marginHorizontal: 8 },
+  score: { fontWeight: '900', fontSize: 20, letterSpacing: 1 },
+  vs: { color: COLORS.dim, fontWeight: '700', fontSize: 14 },
+  badgeRow: {
+    marginTop: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+    alignSelf: 'center',
   },
-  footerText: { color: COLORS.dim, fontSize: 11, textAlign: 'center' },
+  badgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
 });
