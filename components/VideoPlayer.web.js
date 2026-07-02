@@ -87,19 +87,42 @@ export default function VideoPlayer({ selectedChannel, onChannelChange }) {
       try {
         const player = new window.shaka.Player();
         shakaRef.current = player;
-        player.attach(video, /* initializeMediaSource */ true);
+        player.attach(video, true);
 
         player.addEventListener('error', (event) => {
-          if (active) setStatus('error');
+          if (active) {
+            console.error('[Shaka]', event.detail?.category, event.detail?.code, event.detail?.data, event);
+            setStatus('error');
+          }
         });
         player.addEventListener('buffering', (event) => {
           if (active) setStatus(event.buffering ? 'loading' : 'playing');
         });
 
+        // Try to detect DRM license URL from PlayReady PSSH in the MPD
+        try {
+          const mpdText = await (await fetch(streamUrl)).text();
+          const laMatch = mpdText.match(/<LA_URL>([^<]+)<\/LA_URL>/i);
+          if (laMatch) {
+            const prUrl = laMatch[1];
+            const wvUrl = prUrl.replace('prls.', 'wvls.');
+            player.configure({ drm: { servers: {
+              'com.widevine.alpha': wvUrl,
+              'com.microsoft.playready': prUrl,
+            }}});
+            console.log('[Shaka] DRM configured:', { wvUrl, prUrl });
+          }
+        } catch (drmErr) {
+          console.warn('[Shaka] DRM detection failed, trying without:', drmErr);
+        }
+
         await player.load(streamUrl);
         if (active) video.play().catch(() => {});
-      } catch {
-        if (active) setStatus('error');
+      } catch (e) {
+        if (active) {
+          console.error('[Shaka] setup error', e);
+          setStatus('error');
+        }
       }
     }
 
