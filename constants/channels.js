@@ -29,8 +29,10 @@ export function extractDirectUrl(proxiedUrl) {
 }
 
 function proxyUrl(url, noProxy) {
-  if (!url || !IS_WEB || noProxy || isYoutubeUrl(url) || isMpdUrl(url)) return url;
-  return `${PROXY_BASE}/proxy/video?url=${encodeURIComponent(url)}`;
+  if (!url) return url;
+  const cleaned = url.trim();
+  if (!IS_WEB || noProxy || isYoutubeUrl(cleaned) || isMpdUrl(cleaned)) return cleaned;
+  return `${PROXY_BASE}/proxy/video?url=${encodeURIComponent(cleaned)}`;
 }
 
 const DEFAULTS = [

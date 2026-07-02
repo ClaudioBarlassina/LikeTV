@@ -384,7 +384,7 @@ async function refreshChannels() {
 }
 
 function updateChannel(idx, value) {
-  if (channelsData[idx]) channelsData[idx].streamUrl = value || null;
+  if (channelsData[idx]) channelsData[idx].streamUrl = (value || '').trim() || null;
 }
 
 function clearChannel(idx) {
