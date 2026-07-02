@@ -362,7 +362,7 @@ function renderChannels() {
         <div class="name">${ch.name}</div>
         <div class="meta">${ch.country || ''} ${ch.note ? '· ' + ch.note : ''}</div>
       </div>
-      <input type="text" value="${ch.streamUrl || ''}" placeholder="URL del stream (m3u8)" data-index="${i}" onchange="updateChannel(${i}, this.value)">
+      <input type="text" value="${ch.streamUrl || ''}" placeholder="URL del stream (m3u8 / mpd)" data-index="${i}" onchange="updateChannel(${i}, this.value)">
       <div class="actions">
         <label style="color:#A0A0A0;font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;">
           <input type="checkbox" ${ch.noProxy ? 'checked' : ''} onchange="toggleProxy(${i}, this.checked)">

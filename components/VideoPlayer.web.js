@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { CHANNELS } from '../constants/channels';
+import { CHANNELS, isMpdUrl } from '../constants/channels';
 import { COLORS } from '../constants/theme';
 
 async function loadHls() {
@@ -10,6 +10,24 @@ async function loadHls() {
     s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
     s.onload = () => resolve(window.Hls);
     s.onerror = () => reject(new Error('Failed to load hls.js'));
+    document.head.appendChild(s);
+  });
+}
+
+async function loadShaka() {
+  if (typeof window !== 'undefined' && window.shaka?.Player) return window.shaka;
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/shaka-player@4.13.0/dist/shaka-player.compiled.js';
+    s.onload = () => {
+      if (window.shaka) {
+        window.shaka.polyfill.installAll();
+        resolve(window.shaka);
+      } else {
+        reject(new Error('shaka-player loaded but not found'));
+      }
+    };
+    s.onerror = () => reject(new Error('Failed to load shaka-player'));
     document.head.appendChild(s);
   });
 }
@@ -26,32 +44,68 @@ function getStatusFromVideo(video) {
 export default function VideoPlayer({ selectedChannel, onChannelChange }) {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+  const shakaRef = useRef(null);
   const [status, setStatus] = useState('idle');
   const [hlsReady, setHlsReady] = useState(false);
+  const [shakaReady, setShakaReady] = useState(false);
 
   useEffect(() => {
-    loadHls().then(() => setHlsReady(true)).catch(() => {});
+    Promise.all([
+      loadHls().then(() => setHlsReady(true)).catch(() => {}),
+      loadShaka().then(() => setShakaReady(true)).catch(() => {}),
+    ]);
   }, []);
 
   const channel = selectedChannel
     ? CHANNELS.find((c) => c.id === selectedChannel)
     : CHANNELS[0];
   const streamUrl = channel?.streamUrl || null;
+  const isMpd = isMpdUrl(streamUrl);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !streamUrl || !hlsReady) return;
+    if (!video || !streamUrl) return;
+
+    if (isMpd) {
+      if (!shakaReady) return;
+    } else {
+      if (!hlsReady) return;
+    }
 
     let active = true;
 
-    async function setup() {
+    if (shakaRef.current) {
+      shakaRef.current.destroy();
+      shakaRef.current = null;
+    }
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    async function setupShaka() {
+      try {
+        const player = new window.shaka.Player();
+        shakaRef.current = player;
+        player.attach(video, /* initializeMediaSource */ true);
+
+        player.addEventListener('error', (event) => {
+          if (active) setStatus('error');
+        });
+        player.addEventListener('buffering', (event) => {
+          if (active) setStatus(event.buffering ? 'loading' : 'playing');
+        });
+
+        await player.load(streamUrl);
+        if (active) video.play().catch(() => {});
+      } catch {
+        if (active) setStatus('error');
+      }
+    }
+
+    function setupHls() {
       const Hls = window.Hls;
       if (!Hls) return;
-
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
 
       if (Hls.isSupported()) {
         const hls = new Hls();
@@ -62,23 +116,31 @@ export default function VideoPlayer({ selectedChannel, onChannelChange }) {
           if (active) video.play().catch(() => {});
         });
         hls.on(Hls.Events.ERROR, (_, data) => {
-          if (data.fatal) setStatus('error');
+          if (data.fatal && active) setStatus('error');
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = streamUrl;
       }
     }
 
-    setup();
+    if (isMpd) {
+      setupShaka();
+    } else {
+      setupHls();
+    }
 
     return () => {
       active = false;
+      if (shakaRef.current) {
+        shakaRef.current.destroy();
+        shakaRef.current = null;
+      }
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
     };
-  }, [streamUrl, hlsReady]);
+  }, [streamUrl, hlsReady, shakaReady, isMpd]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -135,6 +197,7 @@ export default function VideoPlayer({ selectedChannel, onChannelChange }) {
           autoPlay
           muted
           playsInline
+          crossOrigin="anonymous"
         />
       ) : (
         <View style={styles.placeholder}>

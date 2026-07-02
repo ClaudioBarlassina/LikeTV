@@ -14,6 +14,11 @@ export function getYoutubeId(url) {
   return m ? m[1] : null;
 }
 
+export function isMpdUrl(url) {
+  if (!url) return false;
+  return url.includes('.mpd');
+}
+
 export function extractDirectUrl(proxiedUrl) {
   if (!proxiedUrl || !proxiedUrl.includes(PROXY_BASE + '/proxy/video')) return null;
   try {
@@ -24,7 +29,7 @@ export function extractDirectUrl(proxiedUrl) {
 }
 
 function proxyUrl(url, noProxy) {
-  if (!url || !IS_WEB || noProxy || isYoutubeUrl(url)) return url;
+  if (!url || !IS_WEB || noProxy || isYoutubeUrl(url) || isMpdUrl(url)) return url;
   return `${PROXY_BASE}/proxy/video?url=${encodeURIComponent(url)}`;
 }
 

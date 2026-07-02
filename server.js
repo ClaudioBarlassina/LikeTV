@@ -10,6 +10,8 @@ const PORT = process.env.PORT || 4000;
 
 const M3U8_CACHE = {};
 const M3U8_CACHE_TTL = 3000;
+const MPD_CACHE = {};
+const MPD_CACHE_TTL = 5000;
 
 const API_CACHE = {};
 const API_CACHE_TTL = 10000; // 10 segundos
@@ -19,7 +21,10 @@ setInterval(() => {
   for (const key in M3U8_CACHE) {
     if (now - M3U8_CACHE[key].ts > M3U8_CACHE_TTL) delete M3U8_CACHE[key];
   }
-}, M3U8_CACHE_TTL * 2);
+  for (const key in MPD_CACHE) {
+    if (now - MPD_CACHE[key].ts > MPD_CACHE_TTL) delete MPD_CACHE[key];
+  }
+}, Math.max(M3U8_CACHE_TTL, MPD_CACHE_TTL) * 2);
 
 function jsonResponse(res, status, data) {
   res.writeHead(status, {
@@ -147,6 +152,20 @@ function isM3u8Response(proxyRes, targetUrl) {
   return false;
 }
 
+function isMpdResponse(proxyRes, targetUrl) {
+  const ct = proxyRes.headers['content-type'] || '';
+  if (ct.includes('dash+xml')) return true;
+  if (targetUrl.href.includes('.mpd')) return true;
+  return false;
+}
+
+function rewriteMpdUrls(body, targetUrl) {
+  const base = targetUrl.href.substring(0, targetUrl.href.lastIndexOf('/') + 1);
+  return body
+    .replace(/(media|initialization)="(?!https?:\/\/)([^"]+)"/g, (match, attr, url) => `${attr}="${base}${url}"`)
+    .replace(/<BaseURL>(?!https?:\/\/)([^<]+)<\/BaseURL>/g, (match, url) => `<BaseURL>${base}${url}</BaseURL>`);
+}
+
 function fetchStreamWithRedirect(targetUrl, res, redirects = 0) {
   if (redirects > 5) {
     if (!res.headersSent) { res.writeHead(502); }
@@ -158,6 +177,14 @@ function fetchStreamWithRedirect(targetUrl, res, redirects = 0) {
     const cached = M3U8_CACHE[urlStr];
     if (cached && Date.now() - cached.ts < M3U8_CACHE_TTL) {
       res.writeHead(200, { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/x-mpegURL' });
+      res.end(cached.body);
+      return;
+    }
+  }
+  if (urlStr.includes('.mpd')) {
+    const cached = MPD_CACHE[urlStr];
+    if (cached && Date.now() - cached.ts < MPD_CACHE_TTL) {
+      res.writeHead(200, { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/dash+xml' });
       res.end(cached.body);
       return;
     }
@@ -195,6 +222,18 @@ function fetchStreamWithRedirect(targetUrl, res, redirects = 0) {
         }).join('\n');
         res.writeHead(200, { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/x-mpegURL' });
         M3U8_CACHE[urlStr] = { body: rewritten, ts: Date.now() };
+        res.end(rewritten);
+      });
+      return;
+    }
+    if (isMpdResponse(proxyRes, targetUrl)) {
+      const chunks = [];
+      proxyRes.on('data', (chunk) => chunks.push(chunk));
+      proxyRes.on('end', () => {
+        const body = Buffer.concat(chunks).toString('utf8');
+        const rewritten = rewriteMpdUrls(body, targetUrl);
+        res.writeHead(200, { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/dash+xml' });
+        MPD_CACHE[urlStr] = { body: rewritten, ts: Date.now() };
         res.end(rewritten);
       });
       return;

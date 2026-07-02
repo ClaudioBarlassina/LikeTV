@@ -33,6 +33,16 @@
       "redeemedAt": null,
       "deviceId": null,
       "deviceName": null
+    },
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "code": "WC26-1956-A734",
+      "createdAt": "2026-06-29T00:00:00.000Z",
+      "expiresAt": "2026-07-29T00:00:00.000Z",
+      "status": "active",
+      "redeemedAt": null,
+      "deviceId": null,
+      "deviceName": null
     }
   ],
   "channels": [

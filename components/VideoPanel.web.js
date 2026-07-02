@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, TouchableOpacity, useWindowDimensions } from 'react-native';
-import { CHANNELS, extractDirectUrl, isYoutubeUrl, getYoutubeId } from '../constants/channels';
+import { CHANNELS, extractDirectUrl, isYoutubeUrl, getYoutubeId, isMpdUrl } from '../constants/channels';
 import { COLORS } from '../constants/theme';
 
 async function loadHls() {
@@ -10,6 +10,24 @@ async function loadHls() {
     s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
     s.onload = () => resolve(window.Hls);
     s.onerror = () => reject(new Error('Failed to load hls.js'));
+    document.head.appendChild(s);
+  });
+}
+
+async function loadShaka() {
+  if (typeof window !== 'undefined' && window.shaka?.Player) return window.shaka;
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/shaka-player@4.13.0/dist/shaka-player.compiled.js';
+    s.onload = () => {
+      if (window.shaka) {
+        window.shaka.polyfill.installAll();
+        resolve(window.shaka);
+      } else {
+        reject(new Error('shaka-player loaded but not found'));
+      }
+    };
+    s.onerror = () => reject(new Error('Failed to load shaka-player'));
     document.head.appendChild(s);
   });
 }
@@ -29,9 +47,11 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
   const scale = Math.min(1, Math.max(0.65, windowWidth / 1920));
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+  const shakaRef = useRef(null);
   const wrapRef = useRef(null);
   const [status, setStatus] = useState('idle');
   const [hlsReady, setHlsReady] = useState(false);
+  const [shakaReady, setShakaReady] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
   const controlsTimer = useRef(null);
@@ -40,39 +60,61 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
   const channel = CHANNELS.find((c) => c.id === channelId) || CHANNELS[0];
   const streamUrl = channel?.streamUrl || null;
   const isYoutube = isYoutubeUrl(streamUrl);
+  const isMpd = isMpdUrl(streamUrl);
   const ytId = getYoutubeId(streamUrl);
   const fallbackRef = useRef(false);
 
   useEffect(() => {
-    loadHls().then(() => setHlsReady(true)).catch(() => {});
+    Promise.all([
+      loadHls().then(() => setHlsReady(true)).catch(() => {}),
+      loadShaka().then(() => setShakaReady(true)).catch(() => {}),
+    ]);
   }, []);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !streamUrl || !hlsReady || isYoutube) return;
+    if (!video || !streamUrl || isYoutube) return;
+
+    if ((!isMpd && !hlsReady) || (isMpd && !shakaReady)) return;
 
     if (!active) {
       video.pause();
       video.removeAttribute('src');
       video.load();
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
+      if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+      if (shakaRef.current) { shakaRef.current.destroy(); shakaRef.current = null; }
       return;
     }
 
     let activeFlag = true;
     fallbackRef.current = false;
 
-    async function setup(url) {
+    if (shakaRef.current) { shakaRef.current.destroy(); shakaRef.current = null; }
+    if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+
+    async function setupShaka(url) {
+      try {
+        const player = new window.shaka.Player();
+        shakaRef.current = player;
+        player.attach(video, true);
+
+        player.addEventListener('error', () => {
+          if (activeFlag) setStatus('error');
+        });
+        player.addEventListener('buffering', (e) => {
+          if (activeFlag) setStatus(e.buffering ? 'loading' : 'playing');
+        });
+
+        await player.load(url);
+        if (activeFlag) video.play().catch(() => {});
+      } catch {
+        if (activeFlag) setStatus('error');
+      }
+    }
+
+    function setupHls(url) {
       const Hls = window.Hls;
       if (!Hls) return;
-
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
 
       if (Hls.isSupported()) {
         const hls = new Hls();
@@ -80,19 +122,14 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
         hls.loadSource(url);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          if (activeFlag) {
-            video.play().catch(() => {});
-          }
+          if (activeFlag) video.play().catch(() => {});
         });
         hls.on(Hls.Events.ERROR, (_, data) => {
           if (data.fatal && activeFlag) {
             if (!fallbackRef.current) {
               fallbackRef.current = true;
               const direct = extractDirectUrl(url);
-              if (direct) {
-                setup(direct);
-                return;
-              }
+              if (direct) { setupHls(direct); return; }
             }
             setStatus('error');
           }
@@ -102,16 +139,18 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
       }
     }
 
-    setup(streamUrl);
+    if (isMpd) {
+      setupShaka(streamUrl);
+    } else {
+      setupHls(streamUrl);
+    }
 
     return () => {
       activeFlag = false;
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
+      if (shakaRef.current) { shakaRef.current.destroy(); shakaRef.current = null; }
+      if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
     };
-  }, [streamUrl, hlsReady, isYoutube, active]);
+  }, [streamUrl, hlsReady, shakaReady, isYoutube, isMpd, active]);
 
   useEffect(() => {
     if (isYoutube) { setStatus('playing'); return; }
@@ -257,6 +296,7 @@ export default function VideoPanel({ match, channelId, onChannelChange, onFocus,
             autoPlay
             muted={muted}
             playsInline
+            crossOrigin="anonymous"
           />
         ) : (
           <View style={styles.placeholder}>
